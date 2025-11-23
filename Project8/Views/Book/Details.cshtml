@@ -1,45 +1,91 @@
 ﻿@model WebBanSach.Models.Data.Sach
 
 @{
-    ViewBag.Title = "Chi tiết";
+    ViewBag.Title = "Chi tiết sách";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="row">
-    <div style="float:left; margin-right:15px; margin-left:80px;" class="span5">
-        <img src="/images/@Model.AnhBia" alt="@Model.AnhBia" title="@Model.TenSach" width="250" height="360" />
+<div class="row" style="margin-top:20px;">
+    <!-- Ảnh sách -->
+    <div class="col-md-4">
+        <img src="@Url.Content("~/images/" + Model.AnhBia)"
+             alt="@Model.TenSach"
+             class="img-responsive"
+             style="border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12);" />
     </div>
-    <div style="max-width:600px; float:left;" class="span7">
-        <h2>@Model.TenSach</h2>
-        <h4 class="muted">Thể loại : @Model.TheLoai.TenLoai - Tác giả: @Model.TacGia.TenTG</h4>
-        <p>Nhà xuất bản : @Model.NhaXuatBan.TenNXB</p>
-        <p>@Model.Mota </p>
-        <hr>
-        @if(Model.SoLuongTon > 0)
+
+    <!-- Thông tin sách -->
+    <div class="col-md-8">
+        <h2 style="margin-top:0; font-weight:600; color:#333;">@Model.TenSach</h2>
+
+        <p style="font-size:15px; color:#777; margin-bottom:4px;">
+            <strong>Thể loại:</strong> @Model.TheLoai.TenLoai
+            &nbsp; | &nbsp;
+            <strong>Tác giả:</strong> @Model.TacGia.TenTG
+        </p>
+        <p style="font-size:14px; color:#777; margin-bottom:12px;">
+            <strong>Nhà xuất bản:</strong> @Model.NhaXuatBan.TenNXB
+        </p>
+
+        <p style="margin-top:10px; line-height:1.6; font-size:14px; color:#555;">
+            @Model.Mota
+        </p>
+
+        <br />
+
+        @if (Model.GiaBan > 0)
         {
-            <p>Tình trạng: Còn hàng</p>
-        }
-        else
-        {
-            <p>Tình trạng: Liên hệ</p>
-        }
-        @if (Model.GiaBan >0)
-        {
-            <h3>Giá - @Model.GiaBan.Value.ToString("N0") VND</h3>
+            <h3 style="color:#d9534f; font-weight:700;">
+                Giá - @String.Format("{0:0,0}", Model.GiaBan) VND
+            </h3>
         }
         else
         {
             <h3>Giá - Liên hệ</h3>
         }
-        <br>
-        <p><a href="/Cart/AddItem/?id=@Model.MaSach&quantity=1" class="btn btn-warning btn-large">THÊM VÀO GIỎ HÀNG</a></p>
+
+        @{
+            var conHang = Model.SoLuongTon > 0;
+        }
+
+        <p style="margin-top:6px; font-size:14px;">
+            <strong>Tình trạng:</strong>
+            @if (conHang)
+            {
+                <span style="color:#5cb85c; font-weight:600;">Còn hàng</span>
+                <span style="color:#999; font-size:13px;">(Còn @Model.SoLuongTon sản phẩm)</span>
+            }
+            else
+            {
+                <span style="color:#d9534f; font-weight:600;">Hết hàng</span>
+            }
+        </p>
+
+        @using (Html.BeginForm("AddItem", "Cart", FormMethod.Get, new { @class = "form-inline", style = "margin-top:10px;" }))
+        {
+            @Html.Hidden("id", Model.MaSach)
+
+            <label for="quantity" style="margin-right:8px; font-weight:600;">Số lượng:</label>
+            <input type="number"
+                   id="quantity"
+                   name="quantity"
+                   value="1"
+                   min="1"
+                   class="form-control"
+                   style="width:80px; display:inline-block; margin-right:12px;" />
+
+            <button type="submit"
+                    class="btn btn-warning btn-large"
+                    style="padding:8px 20px; border-radius:20px; font-weight:600;">
+                THÊM VÀO GIỎ HÀNG
+            </button>
+        }
     </div>
 </div>
 
 <hr />
-<h3>Sách liên quan</h3>
-<div class="row">
+
+<h3 style="margin-bottom:20px;">Sách liên quan</h3>
+<div class="row related-books-row">
     @Html.Action("RelatedBooks", "Book", new { id = Model.MaSach })
 </div>
-
-

@@ -7,13 +7,101 @@
 }
 
 <div class="row">
-    <div class="col-md-3">
-        <p class="lead">DANH MỤC SẢN PHẨM</p>
-        @Html.Action("ShowCategory", "Home")
-    </div>
-    <div class="col-md-9">
+   
+    <div class="col-md-12">
         <h3>Tất cả sách</h3>
         <hr />
+        <div class="panel panel-default"
+             style="border-radius:16px; padding:10px 15px; margin-bottom:15px;
+            background-image: linear-gradient(to right, #a8edea 0%, #fed6e3 100%); border:none;">
+            @using (Html.BeginForm("ShowAllBook", "Book", FormMethod.Get, new { @class = "form-inline", role = "form" }))
+            {
+                <div class="row">
+                    <div class="col-md-3" style="margin-bottom:8px;">
+                        <label style="font-weight:600;color:#525151;">Thể loại</label>
+                        @Html.DropDownList(
+                                      "categoryId",
+                                      ViewBag.CategoryList as SelectList
+                                          ?? new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text"),
+                                      "Tất cả",
+                                      new { @class = "form-control input-sm", style = "width:100%; border-radius:20px;" }
+                                  )
+                    </div>
+
+                    <div class="col-md-3" style="margin-bottom:8px;">
+                        <label style="font-weight:600;color:#525151;">Nhà xuất bản</label>
+                        @Html.DropDownList(
+                                      "publisherId",
+                                      ViewBag.PublisherList as SelectList
+                                          ?? new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text"),
+                                      "Tất cả",
+                                      new { @class = "form-control input-sm", style = "width:100%; border-radius:20px;" }
+                                  )
+                    </div>
+
+                    <div class="col-md-3" style="margin-bottom:8px;">
+                        <label style="font-weight:600;color:#525151;">Tác giả</label>
+                        @Html.DropDownList(
+                                      "authorId",
+                                      ViewBag.AuthorList as SelectList
+                                          ?? new SelectList(Enumerable.Empty<SelectListItem>(), "Value", "Text"),
+                                      "Tất cả",
+                                      new { @class = "form-control input-sm", style = "width:100%; border-radius:20px;" }
+                                  )
+                    </div>
+
+                    <div class="col-md-3" style="margin-bottom:8px;">
+                        <label style="font-weight:600;color:#525151;">Khoảng giá</label>
+                        <select name="priceRange"
+                                class="form-control input-sm"
+                                style="width:100%; border-radius:20px;">
+                            @{
+                                string pr = ViewBag.PriceRange as string;
+                            }
+                            <option value="">Tất cả</option>
+                            <option value="1" @(pr == "1" ? "selected" : "")>Dưới 50.000</option>
+                            <option value="2" @(pr == "2" ? "selected" : "")>50.000 - 100.000</option>
+                            <option value="3" @(pr == "3" ? "selected" : "")>100.000 - 200.000</option>
+                            <option value="4" @(pr == "4" ? "selected" : "")>200.000 - 500.000</option>
+                            <option value="5" @(pr == "5" ? "selected" : "")>Trên 500.000</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top:8px;">
+                    <div class="col-md-6" style="margin-bottom:8px;">
+                        <label style="font-weight:600;color:#525151;">Sắp xếp</label>
+                        @{
+                            string sort = ViewBag.SortOrder as string;
+                        }
+                        <select name="sortOrder"
+                                class="form-control input-sm"
+                                style="width:100%; border-radius:20px;">
+                            <option value="">Mặc định (Tên A-Z)</option>
+                            <option value="price_asc" @(sort == "price_asc" ? "selected" : "")>Giá tăng dần</option>
+                            <option value="price_desc" @(sort == "price_desc" ? "selected" : "")>Giá giảm dần</option>
+                            <option value="date_desc" @(sort == "date_desc" ? "selected" : "")>Mới cập nhật</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 text-right" style="margin-top:24px;">
+                        <button type="submit"
+                                class="btn btn-sm"
+                                style="background:#e658588c; color:white; border-radius:20px; padding:4px 18px; border:none;">
+                            Lọc
+                        </button>
+                        <a href="@Url.Action("ShowAllBook","Book")"
+                           class="btn btn-sm btn-default"
+                           style="border-radius:20px; padding:4px 18px;">
+                            Xóa lọc
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+
+
+
         <div class="row">
             @foreach (var item in Model)
             {
@@ -43,7 +131,18 @@
         @*tạo link liên kết trang*@
         Trang @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber)/ @Model.PageCount
 
-        @Html.PagedListPager(Model, page => Url.Action("ShowAllBook", new { page = page }))
+        @Html.PagedListPager(Model, page => Url.Action("ShowAllBook", new
+        {
+            page = page,
+            categoryId = ViewBag.CategoryId,
+            publisherId = ViewBag.PublisherId,
+            authorId = ViewBag.AuthorId,
+            priceRange = ViewBag.PriceRange,
+            sortOrder = ViewBag.SortOrder
+        }))
+
+
+
     </div>
 </div>
 

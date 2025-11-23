@@ -1,33 +1,80 @@
 ﻿@model IEnumerable<WebBanSach.Models.Data.Sach>
 
-@if (Model == null || !Model.Any())
+@foreach (var item in Model)
 {
-    <div class="alert alert-info" style="width:100%;text-align:center;">Chưa có sách liên quan.</div>
-}
-else
-{
-    foreach (var item in Model)
-    {
-        <div class="col-sm-4 col-lg-4 col-md-4">
-            <div class="thumbnail">
-                <a title="@item.TenSach" href="/Book/Details/@item.MaSach">
-                    <img src="/images/@item.AnhBia" alt="@item.AnhBia" width="180" height="250" />
+    <div class="col-sm-3 col-xs-6">
+        <div class="related-card">
+            <a href="@Url.Action("Details", "Book", new { id = item.MaSach })">
+                <img src="@Url.Content("~/images/" + item.AnhBia)"
+                     alt="@item.TenSach"
+                     class="img-responsive related-img" />
+            </a>
+
+            <h5 class="related-title">
+                <a href="@Url.Action("Details", "Book", new { id = item.MaSach })">
+                    @item.TenSach
                 </a>
-                <div class="caption">
-                    <h4>
-                        <a title="@item.TenSach" href="/Book/Details/@item.MaSach" style="color:green;">@(item.TenSach.Length > 26 ? item.TenSach.Substring(0, 22) + "..." : item.TenSach)</a>
-                    </h4>
-                    <a class="btn btn-warning" href="/Cart/AddItem/?id=@item.MaSach&quantity=1">Mua hàng</a>
-                    @if (item.GiaBan > 0)
-                    {
-                        <h4 class="pull-right" style="color:red;">@item.GiaBan.Value.ToString("N0") VND</h4>
-                    }
-                    else
-                    {
-                        <h4 class="pull-right" style="color:red;">Liên hệ</h4>
-                    }
-                </div>
-            </div>
+            </h5>
+
+            <p class="related-price">
+                @if (item.GiaBan > 0)
+                {
+                    @String.Format("{0:0,0}", item.GiaBan) @: VND
+                }
+                else
+                {
+                    @:Liên hệ
+                }
+            </p>
+
+            <a href="@Url.Action("AddItem", "Cart", new { id = item.MaSach, quantity = 1 })"
+               class="btn btn-warning btn-xs"
+               style="border-radius:16px; padding:4px 14px; font-size:12px;">
+                Mua hàng
+            </a>
         </div>
-    }
+    </div>
 }
+
+<style>
+    .related-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 20px;
+        border: 1px solid #f0f0f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+        .related-card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            transform: translateY(-4px);
+        }
+
+    .related-img {
+        height: 190px;
+        margin: 0 auto 10px;
+        object-fit: cover;
+    }
+
+    .related-title a {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+        display: inline-block;
+        min-height: 38px;
+    }
+
+        .related-title a:hover {
+            color: #009688;
+            text-decoration: none;
+        }
+
+    .related-price {
+        color: #d9534f;
+        font-weight: bold;
+        margin: 6px 0 10px;
+    }
+</style>
