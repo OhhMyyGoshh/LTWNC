@@ -1,0 +1,380 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="BookStore">
+    <meta name="author" content="VHP">
+    <title>Book Store Shop</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/Content/Client/css/bootstrap.css" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <link href="/Content/Client/css/shop-homepage.css" rel="stylesheet" />
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    @*<link href="/Content/Client/css/font-awesome.min.css" rel="stylesheet" />*@
+    <link href="/Content/font-awesome-4.6.3/css/font-awesome.min.css" rel="stylesheet" />
+    @*DataTables*@
+    <link href="/Content/Client/css/jquery.dataTables.min.css" rel="stylesheet" />
+    @*!DataTables*@
+    <link href="/Content/Client/css/footer.css" rel="stylesheet" />
+</head>
+<body style="background-color: #F0F0F0;border-bottom: none;">
+    <!-- Navigation -->
+    <nav style="background-image: linear-gradient(to top, #a8edea 0%, #fed6e3 100%);border-radius: 0px 0px 30px 30px;border:none" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="/" style="font-size:25px; color:#525151;"><i class="fa fa-home" aria-hidden="true"></i> WEBBANSACH</a>
+                    </li>
+                    <li>
+                        <a href="/Home/Contact" style="color:#525151"><i class="fa fa-phone-square" aria-hidden="true" style="color:#525151"></i> Liên hệ</a>
+                    </li>
+                </ul>
+                <div class="col-sm-3 col-md-3">
+                    @using (Html.BeginForm("SearchResult", "Home", FormMethod.Post, new { @class = "navbar-form", @role = "search" }))
+                    {
+                        <div class="input-group">
+                            @Html.TextBox("txtSearch", "", htmlAttributes: new { @class = "form-control", @placeholder = "Tìm kiếm sách...", @style = "width: 370px;background: #FAFAFA;border-radius: 40px;" })
+                            <span class="input-group-btn">
+                                <button style="background: #e658588c; border-radius: 40px;" class="btn btn-default" type="submit">
+                                    <span style="color:white">Tìm</span>
+                                </button>
+                            </span>
+                        </div>
+                    }
+                </div>
+                @*Menu right*@
+                @Html.Action("Login", "User")
+                @*ket thuc Menu right*@
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+        
+    </div>
+    <!-- /.container -->
+   
+    </div>
+    <!-- /.container -->
+    <!-- jQuery -->
+    <script src="/Content/Client/js/jquery.js"></script>
+    @*DataTables*@
+    <script src="/Content/Client/js/jquery.dataTables.min.js"></script>
+    @*!DataTables*@
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/Content/Client/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#thongBaoThanhCong').delay(3000).slideUp();
+        });
+    </script>
+    @RenderSection("jsFooter", required: false)
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="BookStore">
+    <meta name="author" content="VHP">
+    <title>Book Store Shop</title>
+    <!-- Bootstrap Core CSS -->
+    <link href="/Content/Client/css/bootstrap.css" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <link href="/Content/Client/css/shop-homepage.css" rel="stylesheet" />
+    <!-- jQuery & jQuery UI CDN (chỉ để 1 lần, ở đầu file) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    @*<link href="/Content/Client/css/font-awesome.min.css" rel="stylesheet" />*@
+    <link href="/Content/font-awesome-4.6.3/css/font-awesome.min.css" rel="stylesheet" />
+    @*DataTables*@
+    <link href="/Content/Client/css/jquery.dataTables.min.css" rel="stylesheet" />
+    @*!DataTables*@
+    <link href="/Content/Client/css/footer.css" rel="stylesheet" />
+</head>
+<body style="background-color: #F0F0F0;border-bottom: none;">
+    <!-- Navigation -->
+    <nav style="background-image: linear-gradient(to top, #a8edea 0%, #fed6e3 100%);border-radius: 0px 0px 30px 30px;border:none" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="/" style="font-size:25px; color:#525151;"><i class="fa fa-home" aria-hidden="true"></i> WEBBANSACH</a>
+                        
+                        
+                    </li>
+
+                    <li>
+                        <a href="/Home/Contact" style="color:#525151"><i class="fa fa-phone-square" aria-hidden="true" style="color:#525151"></i> Liên hệ</a>
+                    </li>
+                </ul>
+                <div class="col-sm-3 col-md-3">
+                    @using (Html.BeginForm("SearchResult", "Home", FormMethod.Post, new { @class = "navbar-form", @role = "search" }))
+                    {
+                        <div class="input-group">
+                            @Html.TextBox("txtSearch", "", htmlAttributes: new { @class = "form-control", @placeholder = "Tìm kiếm sách...", @id = "txtSearch", @style = "width: 370px;background: #FAFAFA;border-radius: 40px;" })
+                            <span class="input-group-btn">
+                                <button style="background: #e658588c; border-radius: 40px;" class="btn btn-default" type="submit">
+                                    <span style="color:white">Tìm</span>
+                                </button>
+                            </span>
+                        </div>
+                    }
+                </div>
+                @*Menu right*@
+                @Html.Action("Login", "User")
+                @*ket thuc Menu right*@
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+    <!-- Page Content -->
+    <div class="container">
+        @RenderBody()
+    </div>
+    <!-- /.container -->
+    <div class="container-fluid" style="padding-left:0px;padding-right:0px">
+        <hr>
+        <div class="container">
+            <footer>
+              
+                
+
+
+            </footer>
+
+        </div>  
+        <!-- Footer -->
+        <footer>
+            <div style="background-image: linear-gradient(to top, #a8edea 0%, #fed6e3 100%);border-radius: 39px 39px 0px 0px; " class="footer" id="footer">
+                <div class="container">
+                    
+                    <div class="row">
+                        
+                        <div class="col-lg-3  col-md-2 col-sm-4 col-xs-6">
+                            <h3 style="color:#515252;"> Trợ giúp </h3>
+                            <ul>
+                                <li> <a href="/Home/QuyDinh" style="color:#515252;font-size:1.6rem"> Qui định sử dụng </a> </li>
+                                <li> <a href="/Home/Thanhtoan" style="color:#515252;font-size:1.6rem"> Phương thức thanh toán </a> </li>
+                                <li> <a href="/Home/VanChuyen" style="color:#515252;font-size:1.6rem"> Phương thức vận chuyển </a> </li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-3  col-md-2 col-sm-4 col-xs-6">
+                            <h3 style="color:#515252"> Hỗ trợ </h3>
+                            <ul>
+                                <li> <a href="/Home/DoiTra" style="color:#515252;font-size:1.6rem"> Chính sách đổi trả </a> </li>
+                                <li> <a href="/Home/Help" style="color:#515252;font-size:1.6rem"> Các câu hỏi thường gặp </a> </li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-2  col-md-2 col-sm-4 col-xs-6">
+                            <h3 style="color:#515252"> Tài khoản </h3>
+                            <ul>
+                                <li> <a href="/User/Register" style="color:#515252;font-size:1.6rem"> Đăng ký thành viên</a> </li>
+                            </ul>
+                        </div>
+
+                        <div class="col-xs-3">
+                            <div @*class="col-lg-3  col-md-3 col-sm-6 col-xs-12 "*@>
+                                <h3 style="color:#515252">Follow Us</h3>
+                                @*<ul>
+                                    <li>
+                                        <div class="input-append newsletter-box text-center">
+                                            <input type="text" class="form-control" placeholder="Email..." />
+                                            <button class="btn-warning btn-block btn-md" type="button"> ĐĂNG KÝ <i class="fa fa-long-arrow-right"> </i> </button>
+                                        </div>
+                                    </li>
+                                </ul>*@
+                                @*<ul class="social">
+                                    <li> <a href="https://goo.gl/fpbZzR"> <i class="fa fa-facebook-official" aria-hidden="true"></i> </a> </li>
+                                    <li> <a href="https://goo.gl/mfjtLE"> <i class="fa fa-youtube-play" aria-hidden="true"></i> </a> </li>
+                                </ul>*@
+                            </div>
+                            <ul class="footer-social ">
+                                <li>
+                                    <a rel="nofollow" href="#" title="Youtube" target="_blank" style="color:#515252;font-size:1.6rem"><i class="fa fa-youtube-play"></i> Youtube</a>
+                                </li>
+                                <li>
+                                    <a rel="nofollow" href="https://www.facebook.com" title="Facebook" target="_blank" style="color:#515252;font-size:1.6rem"><i class="fa fa-facebook-square"></i> Facebook</a>
+                                </li>
+                                
+                            <a href="https://hotro.tiki.vn/hc/vi/articles/115005575826" rel="noreferrer" aria-label=""><img src="https://frontend.tikicdn.com/_desktop-next/static/img/footer/bo-cong-thuong-2.png" width="36" alt=""></a><a href="http://online.gov.vn/HomePage/WebsiteDisplay.aspx?DocId=21201" rel="noreferrer" aria-label=""><img src="https://frontend.tikicdn.com/_desktop-next/static/img/footer/bo-cong-thuong.svg" width="120" alt=""></a>
+                        
+
+                            </ul>
+                            </div>
+                        </div>
+                            <div class="footer-apps">
+                                <!-- Bootstrap Core JavaScript -->
+                                <script src="/Content/Client/js/bootstrap.min.js"></script>
+                                <!-- Script autocomplete (đặt sau khi đã load jQuery UI) -->
+                                <script type="text/javascript">
+                                    $(function () {
+                                        $("#txtSearch").autocomplete({
+                                            minLength: 2,
+                                            source: function (request, response) {
+                                                $.ajax({
+                                                    url: '/Home/SearchSuggest',
+                                                    type: 'GET',
+                                                    dataType: 'json',
+                                                    data: { term: request.term },
+                                                    success: function (data) {
+                                                        response($.map(data, function (item) {
+                                                            return {
+                                                                label: item.TenSach,
+                                                                value: item.TenSach,
+                                                                MaSach: item.MaSach,
+                                                                AnhBia: item.AnhBia,
+                                                                GiaBan: item.GiaBan,
+                                                                TenLoai: item.TenLoai,
+                                                                NhaXuatBan: item.NhaXuatBan,
+                                                                TacGia: item.TacGia
+                                                            };
+                                                        }));
+                                                    }
+                                                });
+                                            },
+                                            select: function (event, ui) {
+                                                if (ui.item && ui.item.MaSach) {
+                                                    window.location.href = '/Book/Details/' + ui.item.MaSach;
+                                                }
+                                            }
+                                        }).autocomplete("instance")._renderItem = function (ul, item) {
+                                            var imgSrc = item.AnhBia && item.AnhBia !== "no-image.png" ? '/images/' + item.AnhBia : 'https://via.placeholder.com/56x75?text=No+Image';
+                                            var gia = item.GiaBan && item.GiaBan > 0 ? item.GiaBan.toLocaleString('vi-VN') + ' VND' : 'Liên hệ';
+                                            var html = '<div class="autocomplete-item-custom">'
+                                                + '<img class="autocomplete-img-custom" src="' + imgSrc + '">' 
+                                                + '<div class="autocomplete-info-custom">'
+                                                + '<div class="autocomplete-title-custom">' + (item.label || 'Không rõ tên') + '</div>'
+                                                + '<div class="autocomplete-type-custom">' + (item.TenLoai || 'Không rõ thể loại') + '</div>'
+                                                + '<div class="autocomplete-nxb-custom">' + (item.NhaXuatBan || 'Không rõ NXB') + '</div>'
+                                                + '<div class="autocomplete-tacgia-custom">' + (item.TacGia || 'Không rõ tác giả') + '</div>'
+                                                + '<div class="autocomplete-price-custom">' + gia + '</div>'
+                                                + '</div>'
+                                                + '</div>';
+                                            return $("<li>").append(html).appendTo(ul);
+                                        };
+                                    });
+                                </script>
+                                <style>
+                                    .ui-autocomplete {
+                                        background: #fff;
+                                        border: 1px solid #d4d4d4;
+                                        max-width: 520px;
+                                        min-width: 420px;
+                                        box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+                                        border-radius: 12px;
+                                        padding: 8px 0;
+                                        z-index: 9999;
+                                        max-height: 350px; /* Giới hạn chiều cao */
+                                        overflow-y: auto;  /* Hiện thanh cuộn dọc nếu nhiều kết quả */
+                                    }
+                                    .ui-menu-item-wrapper {
+                                        padding: 0 !important;
+                                    }
+                                    .autocomplete-item-custom {
+                                        display: flex;
+                                        align-items: flex-start;
+                                        padding: 10px 12px;
+                                        background: #fff;
+                                        cursor: pointer;
+                                        transition: background 0.18s cubic-bezier(.4,0,.2,1);
+                                    }
+                                    .ui-menu-item:hover .autocomplete-item-custom, .ui-state-active .autocomplete-item-custom {
+                                        background: #007bff !important;
+                                        color: #fff;
+                                    }
+                                    .ui-menu-item:hover .autocomplete-title-custom,
+                                    .ui-menu-item:hover .autocomplete-type-custom,
+                                    .ui-menu-item:hover .autocomplete-nxb-custom,
+                                    .ui-menu-item:hover .autocomplete-tacgia-custom,
+                                    .ui-menu-item:hover .autocomplete-price-custom,
+                                    .ui-state-active .autocomplete-title-custom,
+                                    .ui-state-active .autocomplete-type-custom,
+                                    .ui-state-active .autocomplete-nxb-custom,
+                                    .ui-state-active .autocomplete-tacgia-custom,
+                                    .ui-state-active .autocomplete-price-custom {
+                                        color: #fff !important;
+                                    }
+                                    .autocomplete-img-custom {
+                                        width: 56px;
+                                        height: 75px;
+                                        object-fit: cover;
+                                        margin-right: 16px;
+                                        border-radius: 4px;
+                                        border: 1px solid #eee;
+                                        background: #fafafa;
+                                    }
+                                    .autocomplete-info-custom {
+                                        display: flex;
+                                        flex-direction: column;
+                                        gap: 2px;
+                                    }
+                                    .autocomplete-title-custom {
+                                        font-size: 1rem;
+                                        font-weight: bold;
+                                        color: #087BB0;
+                                        margin-bottom: 2px;
+                                    }
+                                    .autocomplete-type-custom, .autocomplete-nxb-custom, .autocomplete-tacgia-custom {
+                                        font-size: 14px;
+                                        color: #666;
+                                    }
+                                    .autocomplete-price-custom {
+                                        color: #d9534f;
+                                        font-size: 1rem;
+                                        font-weight: 700;
+                                        margin-top: 2px;
+                                    }
+                                    /* Khi hover, đổi màu chữ sang trắng */
+                                    .ui-menu-item:hover .autocomplete-title-custom,
+                                    .ui-menu-item:hover .autocomplete-type-custom,
+                                    .ui-menu-item:hover .autocomplete-nxb-custom,
+                                    .ui-menu-item:hover .autocomplete-tacgia-custom,
+                                    .ui-menu-item:hover .autocomplete-price-custom {
+                                        color: #fff !important;
+                                    }
+                                </style>
+    </style>
+    @RenderSection("jsFooter", required: false)
+</body>
+</html>

@@ -1,0 +1,50 @@
+﻿@using PagedList;
+@using PagedList.Mvc;
+@model IPagedList<WebBanSach.Models.Data.Sach>
+
+@{
+    ViewBag.Title = "SearchResult";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-3" style="border-radius: 26px;border: 1px solid #dea3a3;   background-image: linear-gradient(to top, #a8edea 0%, #fed6e3 100%);">
+        <p style="text-align: center; margin: 5px;font-size: 25px;font-weight: 600;"><i aria-hidden="true"></i><font style="color:#087BB0; text-align:center"> DANH MỤC SẢN PHẨM</font></p>
+        @Html.Action("ShowCategory", "Home")
+    </div>
+    <div class="col-md-9">
+        <h3>Kết quả tìm kiếm</h3>
+        <p>@ViewBag.ThongBao</p>
+        <hr />        
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-sm-4 col-lg-4 col-md-4">
+                    <div class="thumbnail">
+                        <a title="@item.TenSach" href="/Book/Details/@item.MaSach">
+                            <img src="/images/@item.AnhBia" alt="@item.AnhBia" width="180" height="250" />
+                        </a>
+                        <div class="caption">
+                            <h4>
+                                <a title="@item.TenSach" href="/Book/Details/@item.MaSach" style="color:#087BB0;">@(item.TenSach.Length > 26 ? item.TenSach.Substring(0, 22) + "..." : item.TenSach)</a>
+                            </h4>
+                            <a style="color:black" class="btn btn-warning" href="/Cart/AddItem/?id=@item.MaSach&quantity=1">Mua hàng</a>
+                            @if (item.GiaBan > 0)
+                            {
+                                <h4 class="pull-right" style="color:black;">@item.GiaBan.Value.ToString("N0") VND</h4>
+                            }
+                            else
+                            {
+                                <h4 class="pull-right" style="color:red;">Liên hệ</h4>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        @*tạo link liên kết trang*@
+        Trang @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber)/ @Model.PageCount
+
+        @Html.PagedListPager(Model, page => Url.Action("SearchResult", new { page = page, @key = ViewBag.Key }))
+    </div>
+</div>

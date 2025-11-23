@@ -1,0 +1,48 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.TacGia>
+
+@{
+    ViewBag.Title = "Quản lý tác giả";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Quản lý tác giả</h2>
+
+<p>
+    @Html.ActionLink("Thêm tác giả", "AddAuthor")
+</p>
+<table class="table" id="myTable">
+    <thead>
+        <tr>
+            <th>
+                Mã
+            </th>
+            <th>
+                Tác Giả
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="row_@item.MaTG">
+                <td>
+                    @Html.DisplayFor(modelItem => item.MaTG)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TenTG)
+                </td>
+                <td>
+                    @Html.ActionLink("Xem", "UpdateAuthor", new { id = item.MaTG }) |
+                    @Ajax.ActionLink("Xóa", "DeleteAuthor", new { id = item.MaTG }, new AjaxOptions
+               {
+                   Confirm = "Bạn có muốn xóa tác giả này không?",
+                   OnComplete = "$('#row_" + @item.MaTG + "').remove()",
+                   HttpMethod = "Delete"
+               })
+                </td>
+            </tr>
+        }
+    </tbody>
+
+</table>

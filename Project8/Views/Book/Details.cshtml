@@ -1,0 +1,45 @@
+﻿@model WebBanSach.Models.Data.Sach
+
+@{
+    ViewBag.Title = "Chi tiết";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div style="float:left; margin-right:15px; margin-left:80px;" class="span5">
+        <img src="/images/@Model.AnhBia" alt="@Model.AnhBia" title="@Model.TenSach" width="250" height="360" />
+    </div>
+    <div style="max-width:600px; float:left;" class="span7">
+        <h2>@Model.TenSach</h2>
+        <h4 class="muted">Thể loại : @Model.TheLoai.TenLoai - Tác giả: @Model.TacGia.TenTG</h4>
+        <p>Nhà xuất bản : @Model.NhaXuatBan.TenNXB</p>
+        <p>@Model.Mota </p>
+        <hr>
+        @if(Model.SoLuongTon > 0)
+        {
+            <p>Tình trạng: Còn hàng</p>
+        }
+        else
+        {
+            <p>Tình trạng: Liên hệ</p>
+        }
+        @if (Model.GiaBan >0)
+        {
+            <h3>Giá - @Model.GiaBan.Value.ToString("N0") VND</h3>
+        }
+        else
+        {
+            <h3>Giá - Liên hệ</h3>
+        }
+        <br>
+        <p><a href="/Cart/AddItem/?id=@Model.MaSach&quantity=1" class="btn btn-warning btn-large">THÊM VÀO GIỎ HÀNG</a></p>
+    </div>
+</div>
+
+<hr />
+<h3>Sách liên quan</h3>
+<div class="row">
+    @Html.Action("RelatedBooks", "Book", new { id = Model.MaSach })
+</div>
+
+

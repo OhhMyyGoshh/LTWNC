@@ -1,0 +1,15 @@
+﻿@{
+    ViewBag.Title = "Kích hoạt tài khoản";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Kích hoạt tài khoản</h2>
+@if (ViewBag.Message != null)
+{
+    <div class="alert alert-info">@ViewBag.Message</div>
+}
+else
+{
+    <div class="alert alert-success">Tài khoản của bạn đã được kích hoạt thành công!</div>
+}
+<a href="@Url.Action("LoginPage", "User")" class="btn btn-primary">Đăng nhập</a>

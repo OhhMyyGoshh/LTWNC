@@ -1,0 +1,59 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.KhachHang>
+
+@{
+    ViewBag.Title = "ShowUser";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Danh sách người dùng</h2>
+
+<table class="table" id="myTable">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.TenKH)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TaiKhoan)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NgayTao)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TrangThai)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="row_@item.MaKH">
+                <td>
+                    @Html.DisplayFor(modelItem => item.TenKH)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TaiKhoan)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.NgayTao)
+                </td>
+                <td>
+                    <a href="#" class="btn-active" data-id="@item.MaKH">@Html.Raw(item.TrangThai ? "<strong>Kích hoạt</strong>" : "Khoá")</a>
+                </td>
+                <td>
+                    @Html.ActionLink("Xem", "DetailsUser", new { id = item.MaKH }) |
+                    @Ajax.ActionLink("Xóa", "DeleteUser", new { id = item.MaKH }, new AjaxOptions
+               {
+                   Confirm = "Bạn có muốn xóa người dùng này không?",
+                   OnComplete = "$('#row_" + @item.MaKH + "').remove()",
+                   HttpMethod = "Delete"
+               })
+                </td>
+            </tr>
+        }
+    </tbody>
+
+
+</table>

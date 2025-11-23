@@ -1,0 +1,71 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.Sach>
+
+@{
+    ViewBag.Title = "ShowListBook";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Quản lý sách</h2>
+
+<p>
+    @Html.ActionLink("Thêm sách", "AddBook")
+</p>
+<table class="table" id="myTable">
+    <thead>
+        <tr>
+            <th>
+                Mã
+            </th>
+            <th width="320">
+                Tên Sách
+            </th>
+            <th>
+                Ảnh Bìa
+            </th>
+            <th>
+                Giá Bán
+            </th>
+            <th>
+                Ngày Cập Nhật
+            </th>
+            <th>
+                Số Lượng
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="row_@item.MaSach">
+                <td>
+                    @Html.DisplayFor(modelItem => item.MaSach)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TenSach)
+                </td>
+                <td>
+                    <img src="/images/@item.AnhBia" width="105" height="140" />
+                </td>
+                <td>
+                    <span>@(item.GiaBan.HasValue ? item.GiaBan.Value.ToString("N0") : "Liên hệ") VND</span>
+                </td>
+                <td>
+                    @String.Format("{0:dd/MM/yyyy}", item.NgayCapNhat)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SoLuongTon)
+                </td>
+                <td>
+                    @Html.ActionLink("Xem", "DetailsBook", new { id = item.MaSach }) |
+                    @Ajax.ActionLink("Xóa", "DeleteBook", new { id = item.MaSach }, new AjaxOptions
+               {
+                   Confirm = "Bạn có muốn xóa cuốn sách này không?",
+                   OnComplete = "$('#row_" + @item.MaSach + "').remove()",
+                   HttpMethod = "Delete"
+               })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

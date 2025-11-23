@@ -1,0 +1,26 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.Sach>
+
+@foreach (var item in Model)
+{
+    <div class="col-sm-4 col-lg-4 col-md-4">
+        <div class="thumbnail">
+            <a title="@item.TenSach" href="/Book/Details/@item.MaSach">
+                <img src="/images/@item.AnhBia" alt="@item.AnhBia" width="180" height="250" />
+            </a>
+            <div class="caption">
+                <h4>
+                    <a title="@item.TenSach" href="/Book/Details/@item.MaSach" style="color:#087BB0;">@(item.TenSach.Length > 26 ? item.TenSach.Substring(0, 22) + "..." : item.TenSach)</a>
+                </h4>
+                <a style="color:black" class="btn btn-warning" href="/Cart/AddItem/?id=@item.MaSach&quantity=1">Mua</a>
+                @if (item.GiaBan > 0)
+                {
+                    <h4 class="pull-right" style="color:black;">@item.GiaBan.Value.ToString("N0") VND</h4>
+                }
+                else
+                {
+                    <h4 class="pull-right" style="color:red;">Liên hệ</h4>
+                }
+            </div>
+        </div>
+    </div>
+}

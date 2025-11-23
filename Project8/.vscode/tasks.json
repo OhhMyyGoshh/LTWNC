@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build ASP.NET MVC Project",
+			"type": "shell",
+			"command": "msbuild",
+			"args": [
+				"WebBanSach.csproj"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
+		}
+	]
+}

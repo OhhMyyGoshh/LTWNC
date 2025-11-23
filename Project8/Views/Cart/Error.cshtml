@@ -1,0 +1,48 @@
+﻿@{
+    ViewBag.Title = "Lỗi đặt hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container" style="margin-top: 50px; margin-bottom: 100px;">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+            <div class="alert alert-danger text-center" style="padding: 40px;">
+                <h1 style="font-size: 80px; margin: 0;">
+                    <i class="fa fa-exclamation-triangle"></i>
+                </h1>
+                <h2>Có lỗi xảy ra khi đặt hàng!</h2>
+                <p style="font-size: 16px; margin-top: 20px;">
+                    Đơn hàng của bạn không thể được xử lý. Vui lòng thử lại hoặc liên hệ với chúng tôi để được hỗ trợ.
+                </p>
+                <hr />
+                <div style="margin-top: 30px;">
+                    <a href="/Cart" class="btn btn-warning btn-lg" style="margin-right: 10px;">
+                        <i class="fa fa-shopping-cart"></i> Quay lại giỏ hàng
+                    </a>
+                    <a href="/Home" class="btn btn-primary btn-lg">
+                        <i class="fa fa-home"></i> Về trang chủ
+                    </a>
+                </div>
+            </div>
+
+            <div class="panel panel-default" style="margin-top: 30px;">
+                <div class="panel-heading">
+                    <h4><i class="fa fa-info-circle"></i> Một số nguyên nhân có thể gây ra lỗi:</h4>
+                </div>
+                <div class="panel-body">
+                    <ul style="font-size: 15px; line-height: 2;">
+                        <li>Giỏ hàng trống hoặc sản phẩm đã hết hàng</li>
+                        <li>Thông tin thanh toán không hợp lệ</li>
+                        <li>Kết nối với cổng thanh toán bị gián đoạn</li>
+                        <li>Phiên làm việc đã hết hạn</li>
+                    </ul>
+                    <p style="margin-top: 20px;">
+                        <strong>Cần hỗ trợ?</strong> Vui lòng liên hệ:
+                        <a href="tel:0123456789">0123-456-789</a> hoặc
+                        <a href="mailto:support@webbansach.com">support@webbansach.com</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

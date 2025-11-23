@@ -1,0 +1,9 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.TheLoai>
+
+<div  class="text-links" style="font-size: 21px;">
+    @foreach (var item in Model)
+    {
+        <a style="color:#a71717;font-family: Roboto;" href="/Home/ThemesBook/@item.MaLoai" class="">@item.TenLoai</a>
+        <br/>
+    }
+</div>

@@ -1,0 +1,176 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.DonDatHang>
+@{
+    ViewBag.Title = "Đơn hàng của bạn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentStatus = ViewBag.CurrentStatus as int?;
+}
+
+<div class="container" style="margin-top: 30px; margin-bottom: 50px;">
+    <h2><i class="fa fa-shopping-bag"></i> Đơn Hàng Của Bạn</h2>
+    <hr/>
+    
+    <!-- Filter Tabs -->
+    <ul class="nav nav-tabs" style="margin-bottom: 20px;">
+        <li class="@(currentStatus == null ? "active" : "")">
+            <a href="@Url.Action("TrackingOder")">
+                <i class="fa fa-list"></i> Tất cả
+            </a>
+        </li>
+        <li class="@(currentStatus == 0 ? "active" : "")">
+            <a href="@Url.Action("TrackingOder", new { status = 0 })">
+                <i class="fa fa-clock-o"></i> Chờ xác nhận
+            </a>
+        </li>
+        <li class="@(currentStatus == 1 ? "active" : "")">
+            <a href="@Url.Action("TrackingOder", new { status = 1 })">
+                <i class="fa fa-check-circle"></i> Đã xác nhận
+            </a>
+        </li>
+        <li class="@(currentStatus == 2 ? "active" : "")">
+            <a href="@Url.Action("TrackingOder", new { status = 2 })">
+                <i class="fa fa-truck"></i> Đang giao
+            </a>
+        </li>
+        <li class="@(currentStatus == 3 ? "active" : "")">
+            <a href="@Url.Action("TrackingOder", new { status = 3 })">
+                <i class="fa fa-check"></i> Đã giao
+            </a>
+        </li>
+        <li class="@(currentStatus == 4 ? "active" : "")">
+            <a href="@Url.Action("TrackingOder", new { status = 4 })">
+                <i class="fa fa-times-circle"></i> Đã hủy
+            </a>
+        </li>
+    </ul>
+    
+    @if (Model.Count() != 0)
+    {
+        foreach (var item in Model)
+        {
+            var trangThai = item.TrangThaiDonHang ?? 0;
+            var statusText = "";
+            var statusColor = "";
+            var statusIcon = "";
+            
+            switch(trangThai)
+            {
+                case 0: statusText = "Chờ xác nhận"; statusColor = "warning"; statusIcon = "clock-o"; break;
+                case 1: statusText = "Đã xác nhận"; statusColor = "info"; statusIcon = "check-circle"; break;
+                case 2: statusText = "Đang giao hàng"; statusColor = "primary"; statusIcon = "truck"; break;
+                case 3: statusText = "Đã giao"; statusColor = "success"; statusIcon = "check"; break;
+                case 4: statusText = "Đã hủy"; statusColor = "danger"; statusIcon = "times-circle"; break;
+            }
+            
+            var tongTien = item.ChiTietDDHs.Sum(x => x.DonGia.GetValueOrDefault() * x.SoLuong.GetValueOrDefault()) - item.GiamGia.GetValueOrDefault();
+            
+            <div class="panel panel-default" style="margin-bottom: 20px;">
+                <div class="panel-heading" style="background: #f5f5f5;">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 style="margin: 5px 0;">
+                                <i class="fa fa-shopping-bag"></i> Đơn hàng DH@(item.MaDDH.ToString("D6"))
+                                <small style="margin-left: 15px;">@item.NgayDat.ToString("dd/MM/yyyy HH:mm")</small>
+                            </h4>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <span class="label label-@statusColor" style="font-size: 13px; padding: 8px 15px;">
+                                <i class="fa fa-@statusIcon"></i> @statusText
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            @if(item.ChiTietDDHs.Count() > 0)
+                            {
+                                <div style="margin-bottom: 10px;">
+                                    <strong>Sản phẩm (@item.ChiTietDDHs.Count() cuốn):</strong>
+                                    <div style="margin-top: 10px;">
+                                        @foreach(var sp in item.ChiTietDDHs.Take(3))
+                                        {
+                                            var imagePath = !string.IsNullOrEmpty(sp.Sach.AnhBia) ? "/images/" + sp.Sach.AnhBia : "/images/no-image.jpg";
+                                            <div style="display: flex; align-items: center; margin-bottom: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa;">
+                                                <img src="@imagePath" alt="@sp.Sach.TenSach" onerror="this.src='/images/no-image.jpg'" style="width: 60px; height: 60px; object-fit: cover; margin-right: 10px; border-radius: 3px;" />
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: bold; font-size: 14px; margin-bottom: 3px;">@sp.Sach.TenSach</div>
+                                                    <div style="font-size: 12px; color: #666;">
+                                                        <span>Số lượng: <strong>@sp.SoLuong</strong></span>
+                                                        <span style="margin-left: 15px;">Đơn giá: <strong>@sp.DonGia.GetValueOrDefault().ToString("N0")đ</strong></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if(item.ChiTietDDHs.Count() > 3)
+                                        {
+                                            <div style="padding: 5px; color: #999; font-style: italic;">
+                                                ... và @(item.ChiTietDDHs.Count() - 3) sản phẩm khác
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <p style="margin: 5px 0;">
+                                <strong>Ngày giao dự kiến:</strong> @item.NgayGiao.ToString("dd/MM/yyyy")
+                            </p>
+                            @if(item.GiamGia > 0)
+                            {
+                                <p style="margin: 5px 0; color: #d9534f;">
+                                    <i class="fa fa-ticket"></i> <strong>Đã áp dụng voucher giảm @item.GiamGia.GetValueOrDefault().ToString("N0")đ</strong>
+                                </p>
+                            }
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <h4 style="color: #d9534f; margin-top: 10px;">
+                                <strong>@tongTien.ToString("N0") đ</strong>
+                            </h4>
+                            <a href="@Url.Action("TrackingOderDetails", "Cart", new { id = item.MaDDH })" class="btn btn-primary btn-sm">
+                                <i class="fa fa-eye"></i> Xem chi tiết
+                            </a>
+                            @if(trangThai == 0)
+                            {
+                                <button onclick="cancelOrder(@item.MaDDH)" class="btn btn-danger btn-sm" style="margin-top: 5px;">
+                                    <i class="fa fa-times"></i> Hủy đơn hàng
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center" style="margin-top: 50px; padding: 40px;">
+            <i class="fa fa-shopping-cart fa-3x"></i>
+            <h3>Bạn chưa có đơn hàng nào!</h3>
+            <p>Hãy khám phá và mua sắm những cuốn sách yêu thích của bạn.</p>
+            <a href="/Home" class="btn btn-primary btn-lg" style="margin-top: 20px;">
+                <i class="fa fa-shopping-bag"></i> Mua sắm ngay
+            </a>
+        </div>
+    }
+</div>
+
+<script>
+    function cancelOrder(orderId) {
+        if (confirm('Bạn có chắc chắn muốn hủy đơn hàng DH' + orderId.toString().padStart(6, '0') + ' không?\n\nLưu ý: Thao tác này không thể hoàn tác!')) {
+            $.ajax({
+                url: '/Cart/CancelOrder',
+                type: 'POST',
+                data: { orderId: orderId },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + response.message);
+                    }
+                },
+                error: function () {
+                    alert('Có lỗi xảy ra khi hủy đơn hàng!');
+                }
+            });
+        }
+    }
+</script>

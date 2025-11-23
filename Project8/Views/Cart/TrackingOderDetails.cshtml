@@ -1,0 +1,255 @@
+﻿@model WebBanSach.Models.Data.DonDatHang
+@{
+    ViewBag.Title = "Chi tiết đơn hàng #" + Model.MaDDH;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    var trangThai = Model.TrangThaiDonHang ?? 0;
+    var statusText = "";
+    var statusColor = "";
+    
+    switch(trangThai)
+    {
+        case 0: statusText = "Chờ xác nhận"; statusColor = "warning"; break;
+        case 1: statusText = "Đã xác nhận"; statusColor = "info"; break;
+        case 2: statusText = "Đang giao hàng"; statusColor = "primary"; break;
+        case 3: statusText = "Đã giao"; statusColor = "success"; break;
+        case 4: statusText = "Đã hủy"; statusColor = "danger"; break;
+    }
+}
+
+<style>
+    .order-timeline {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0;
+        position: relative;
+    }
+    .order-timeline::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #e0e0e0;
+        z-index: 0;
+    }
+    .timeline-item {
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        flex: 1;
+    }
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        color: #999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 18px;
+    }
+    .timeline-item.active .timeline-icon {
+        background: #5cb85c;
+        color: white;
+    }
+    .timeline-item.current .timeline-icon {
+        background: #5bc0de;
+        color: white;
+        box-shadow: 0 0 0 4px rgba(91, 192, 222, 0.3);
+    }
+</style>
+
+<div class="container" style="margin-top: 30px; margin-bottom: 50px;">
+    <h2>
+        <i class="fa fa-shopping-bag"></i> Chi tiết đơn hàng #@Model.MaDDH
+        <span class="label label-@statusColor pull-right">@statusText</span>
+    </h2>
+    <hr/>
+    
+    <!-- Timeline trạng thái -->
+    <div class="order-timeline">
+        <div class="timeline-item @(trangThai >= 0 && trangThai != 4 ? "active" : "") @(trangThai == 0 ? "current" : "")">
+            <div class="timeline-icon"><i class="fa fa-clock-o"></i></div>
+            <small>Chờ xác nhận</small>
+        </div>
+        <div class="timeline-item @(trangThai >= 1 && trangThai != 4 ? "active" : "") @(trangThai == 1 ? "current" : "")">
+            <div class="timeline-icon"><i class="fa fa-check"></i></div>
+            <small>Đã xác nhận</small>
+        </div>
+        <div class="timeline-item @(trangThai >= 2 && trangThai != 4 ? "active" : "") @(trangThai == 2 ? "current" : "")">
+            <div class="timeline-icon"><i class="fa fa-truck"></i></div>
+            <small>Đang giao</small>
+        </div>
+        <div class="timeline-item @(trangThai == 3 ? "active current" : "")">
+            <div class="timeline-icon"><i class="fa fa-gift"></i></div>
+            <small>Đã giao</small>
+        </div>
+    </div>
+
+    @if(trangThai == 4)
+    {
+        <div class="alert alert-danger text-center">
+            <i class="fa fa-times-circle fa-3x"></i>
+            <h4>Đơn hàng đã bị hủy</h4>
+        </div>
+    }
+
+    <!-- Thông tin nhận hàng -->
+    <div class="row" style="margin-bottom: 30px;">
+        <div class="col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h4><i class="fa fa-user"></i> Thông tin người nhận</h4>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-borderless" style="margin-bottom: 0;">
+                        <tr>
+                            <td style="width: 40%; font-weight: bold;"><i class="fa fa-user-circle"></i> Họ tên:</td>
+                            <td>@Model.KhachHang.TenKH</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;"><i class="fa fa-phone"></i> Điện thoại:</td>
+                            <td>
+                                @{
+                                    var phone = Model.KhachHang.DienThoai;
+                                    // Che 3 số giữa để bảo mật: 090***5678
+                                    var maskedPhone = phone.Length >= 7 
+                                        ? phone.Substring(0, 3) + "***" + phone.Substring(phone.Length - 4) 
+                                        : phone;
+                                }
+                                @maskedPhone
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;"><i class="fa fa-envelope"></i> Email:</td>
+                            <td>@Model.KhachHang.Email</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h4><i class="fa fa-map-marker"></i> Địa chỉ giao hàng</h4>
+                </div>
+                <div class="panel-body">
+                    <p style="font-size: 15px; line-height: 1.8;">
+                        <i class="fa fa-home" style="color: #5cb85c;"></i> 
+                        <strong>@Model.KhachHang.DiaChi</strong>
+                    </p>
+                    <hr style="margin: 15px 0;"/>
+                    <p style="margin: 0;">
+                        <i class="fa fa-calendar"></i> <strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy HH:mm")
+                    </p>
+                    <p style="margin: 5px 0 0 0;">
+                        <i class="fa fa-truck"></i> <strong>Dự kiến giao:</strong> 
+                        <span style="color: #5bc0de;">@Model.NgayGiao.ToString("dd/MM/yyyy")</span>
+                    </p>
+                    <p style="margin: 5px 0 0 0;">
+                        <i class="fa fa-credit-card"></i> <strong>Thanh toán:</strong> 
+                        @(Model.ThanhToan == 1 ? "Tiền mặt khi nhận hàng (COD)" : "Chuyển khoản")
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.GhiChu))
+    {
+        <div class="panel panel-warning" style="margin-bottom: 20px;">
+            <div class="panel-heading">
+                <h4><i class="fa fa-commenting"></i> Ghi chú đơn hàng</h4>
+            </div>
+            <div class="panel-body">
+                <p style="font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">@Model.GhiChu</p>
+            </div>
+        </div>
+    }
+
+    <!-- Chi tiết sản phẩm -->
+    <div class="panel panel-primary">
+        <div class="panel-heading"><h4><i class="fa fa-shopping-cart"></i> Sản phẩm</h4></div>
+        <div class="panel-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Sản phẩm</th>
+                        <th class="text-right" style="width: 18%;">Đơn giá</th>
+                        <th class="text-center" style="width: 12%;">Số lượng</th>
+                        <th class="text-right" style="width: 20%;">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var item in Model.ChiTietDDHs)
+                    {
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center;">
+                                    <img src="/images/@item.Sach.AnhBia" 
+                                         alt="@item.Sach.TenSach" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;"
+                                         onerror="this.src='/images/no-image.jpg';" />
+                                    <strong>@item.Sach.TenSach</strong>
+                                </div>
+                            </td>
+                            <td class="text-right">@item.DonGia.GetValueOrDefault().ToString("N0") đ</td>
+                            <td class="text-center">@item.SoLuong</td>
+                            <td class="text-right">
+                                <strong>@((item.DonGia.GetValueOrDefault() * item.SoLuong.GetValueOrDefault()).ToString("N0")) đ</strong>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tổng tiền - Bố cục riêng sang trọng -->
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+            <div class="panel panel-default" style="border: 2px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div class="panel-body" style="padding: 20px;">
+                    @{
+                        var tamTinh = Model.ChiTietDDHs.Sum(x => x.DonGia.GetValueOrDefault() * x.SoLuong.GetValueOrDefault());
+                        var tongTien = tamTinh - Model.GiamGia.GetValueOrDefault();
+                    }
+                    
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px;">
+                        <span>Tạm tính:</span>
+                        <span><strong>@tamTinh.ToString("N0") đ</strong></span>
+                    </div>
+                    
+                    @if(Model.GiamGia > 0)
+                    {
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px; color: #5cb85c;">
+                            <span><i class="fa fa-ticket"></i> Giảm giá:</span>
+                            <span><strong>- @Model.GiamGia.GetValueOrDefault().ToString("N0") đ</strong></span>
+                        </div>
+                    }
+                    
+                    <hr style="margin: 15px 0; border-top: 2px solid #ddd;"/>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                        <span style="font-size: 20px; font-weight: bold;">Tổng cộng:</span>
+                        <span style="font-size: 24px; font-weight: bold; color: #d9534f;">
+                            @tongTien.ToString("N0") đ
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center" style="margin-top: 30px;">
+        <a href="/Cart/TrackingOder" class="btn btn-primary btn-lg">
+            <i class="fa fa-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>

@@ -1,0 +1,9 @@
+﻿@{
+    ViewBag.Title = "Đăng nhập Google thất bại";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div style="text-align:center; margin-top:40px;">
+    <h2 style="color:red">Đăng nhập Google thất bại</h2>
+    <p>@(ViewBag.ErrorMessage ?? TempData["ErrorMessage"] ?? "Đăng nhập Google thất bại. Vui lòng thử lại.")</p>
+    <a href="/User/LoginPage" class="btn btn-primary">Quay lại trang đăng nhập</a>
+</div>

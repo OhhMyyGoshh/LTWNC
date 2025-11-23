@@ -1,0 +1,25 @@
+﻿
+@{
+    ViewBag.Title = "KiemTraThongBaoKichHoat";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<META HTTP-EQUIV="Refresh" CONTENT="5;URL=@(Url.Action("Index", "Home"))">
+<h2>Tạo Tài Khoản Thành Công</h2>
+<div class="alert alert-success" id="after">
+    <strong><span style="margin-right: 5px;" class="glyphicon glyphicon-ok"></span>  Bạn Vui Lòng Kiểm Tra Email, Kích Hoạt Tài Khoản Để Mua Hàng</strong>
+</div>
+<div>
+    <p style="text-align: center; color: red;">Bạn Sẽ Được Chuyển Về Trang Mua Hàng Trong <span id="countdown"></span></p>
+</div> 
+<script>
+    var timeleft = 5;
+    var downloadTimer = setInterval(function () {
+        if (timeleft <= 0) {
+            clearInterval(downloadTimer);
+            document.getElementById("countdown").innerHTML = "0 s";
+        } else {
+            document.getElementById("countdown").innerHTML = timeleft + " s";
+        }
+        timeleft -= 1;
+    }, 1000);
+</script>

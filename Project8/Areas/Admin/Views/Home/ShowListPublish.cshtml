@@ -1,0 +1,61 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.NhaXuatBan>
+
+@{
+    ViewBag.Title = "ShowListPublish";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Quản lý nhà xuất bản</h2>
+
+<p>
+    @Html.ActionLink("Thêm nhà xuất bản", "AddPublish")
+</p>
+<table class="table" id="myTable">
+    <thead>
+        <tr>
+            <th>
+                Mã
+            </th>
+            <th>
+                Nhà Xuất Bản
+            </th>
+            <th>
+                Địa Chỉ
+            </th>
+            <th>
+                Điện Thoại
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="row_@item.MaNXB">
+                <td>
+                    @Html.DisplayFor(modelItem => item.MaNXB)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TenNXB)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DiaChi)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DienThoai)
+                </td>
+                <td>
+                    @Html.ActionLink("Xem", "UpdatePublish", new { id = item.MaNXB }) |
+                    @Ajax.ActionLink("Xóa", "DeletePublish", new { id = item.MaNXB }, new AjaxOptions
+               {
+                   Confirm = "Bạn có muốn xóa nhà xuất bản này không?",
+                   OnComplete = "$('#row_" + @item.MaNXB + "').remove()",
+                   HttpMethod = "Delete"
+               })
+                </td>
+            </tr>
+        }
+    </tbody>
+
+</table>

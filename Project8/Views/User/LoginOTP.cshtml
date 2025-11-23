@@ -1,0 +1,258 @@
+﻿@{
+    ViewBag.Title = "Đăng nhập bằng OTP";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="loginbox" style="margin-top:50px;" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <div class="panel-title">Đăng nhập bằng OTP</div>
+        </div>
+        <div style="padding-top:30px" class="panel-body">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                var showError = ViewBag.ShowStep2 == true ? "step2" : "step1";
+                <div class="alert alert-danger" id="errorMessage">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>@error.ErrorMessage</div>
+                    }
+                </div>
+            }
+
+            @{
+                // Mặc định hiển thị step 1, chỉ hiển thị step 2 nếu có ViewBag.ShowStep2 = true VÀ có email đã gửi
+                var showStep1 = ViewBag.ShowStep2 != true || string.IsNullOrEmpty(ViewBag.EmailOrPhone as string);
+                var showStep2 = ViewBag.ShowStep2 == true && !string.IsNullOrEmpty(ViewBag.EmailOrPhone as string);
+            }
+
+            <div id="step1" style="display:@(showStep1 ? "block" : "none");">
+                <!-- Bước 1: Nhập email/số điện thoại và gửi OTP -->
+                <div style="margin-bottom: 25px" class="input-group">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
+                    <input type="text" id="emailOrPhone" class="form-control" placeholder="Email hoặc Số điện thoại" value="@(ViewBag.EmailOrPhone ?? "")" autofocus />
+                </div>
+                <small class="text-muted" style="margin-left: 15px; margin-bottom: 15px; display: block;">
+                    Nhập email hoặc số điện thoại đã đăng ký để nhận mã OTP
+                </small>
+
+                <div style="margin-top:10px" class="form-group">
+                    <div class="col-sm-12 controls">
+                        <button type="button" id="btnSendOTP" class="btn btn-primary" style="background-color:#0094ff; border:none; width: 100%;">
+                            <i class="glyphicon glyphicon-send"></i> Gửi mã OTP
+                        </button>
+                    </div>
+                </div>
+
+                <div id="otpMessage" style="display:none; margin-top: 15px;" class="alert"></div>
+            </div>
+
+            <div id="step2" style="display:@(showStep2 ? "block" : "none");">
+                <!-- Bước 2: Nhập mã OTP -->
+                @{
+                    var sentEmailDisplay = ViewBag.SentEmail != null ? ViewBag.SentEmail.ToString() : 
+                                          (!string.IsNullOrEmpty(ViewBag.EmailOrPhone as string) ? ViewBag.EmailOrPhone.ToString() : "");
+                    // Chỉ giữ giá trị OTP nếu đang ở step 2 (có lỗi OTP), không giữ nếu quay về step 1
+                    var otpCodeValue = (ViewBag.ShowStep2 == true && Request.Form["otpCode"] != null) ? Request.Form["otpCode"].ToString() : "";
+                }
+                
+                @if (!string.IsNullOrEmpty(sentEmailDisplay))
+                {
+                    <div class="alert alert-info">
+                        <i class="glyphicon glyphicon-info-sign"></i>
+                        Mã OTP đã được gửi tới <strong id="sentEmail">@sentEmailDisplay</strong>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="glyphicon glyphicon-info-sign"></i>
+                        Mã OTP đã được gửi tới <strong id="sentEmail"></strong>
+                    </div>
+                }
+                
+                @using (Html.BeginForm("VerifyOTPLogin", "User", FormMethod.Post, new { id = "otpForm" }))
+                {
+                    <input type="hidden" id="hiddenEmailOrPhone" name="emailOrPhone" value="@(ViewBag.EmailOrPhone ?? "")" />
+
+                    <div style="margin-bottom: 25px" class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                        <input type="text" id="otpCode" name="otpCode" class="form-control" placeholder="Nhập mã OTP 6 chữ số" maxlength="6" value="@otpCodeValue" autofocus />
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var otpInput = document.getElementById('otpCode');
+                            if (otpInput) {
+                                otpInput.addEventListener('input', function() {
+                                    // Chỉ cho nhập số và tối đa 6 ký tự
+                                    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+                                });
+                            }
+                        });
+                    </script>
+                    </div>
+                    <small class="text-muted" style="margin-left: 15px; margin-bottom: 15px; display: block;">
+                        Mã OTP có hiệu lực trong 5 phút
+                    </small>
+
+                    <div style="margin-top:10px" class="form-group">
+                        <div class="col-sm-12 controls">
+                            <button type="submit" class="btn btn-success" style="background-color:#28a745; border:none; width: 100%;">
+                                <i class="glyphicon glyphicon-ok"></i> Xác thực và Đăng nhập
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="javascript:void(0)" id="btnResendOTP" style="color:#0094ff;">Gửi lại mã OTP</a> |
+                        <a href="javascript:void(0)" id="btnChangeEmail" style="color:#0094ff;">Thay đổi email/số điện thoại</a>
+                    </div>
+                }
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <div class="col-md-12 control">
+                    <div style="border-top: 1px solid#888; padding-top:15px; font-size:85%">
+                        <a href="/User/LoginPage" style="color:#0094ff;">← Quay lại đăng nhập bằng mật khẩu</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var emailOrPhoneValue = '@(ViewBag.EmailOrPhone ?? "")';
+        
+        // Khởi tạo: đảm bảo step đúng được hiển thị
+        @if (ViewBag.ShowStep2 == true && !string.IsNullOrEmpty(ViewBag.EmailOrPhone as string))
+        {
+            <text>
+            // Đang ở step 2 (có lỗi OTP)
+            $('#step1').hide();
+            $('#step2').show();
+            if (emailOrPhoneValue) {
+                $('#emailOrPhone').val(emailOrPhoneValue);
+                $('#hiddenEmailOrPhone').val(emailOrPhoneValue);
+            }
+            </text>
+        }
+        else
+        {
+            <text>
+            // Đang ở step 1
+            $('#step1').show();
+            $('#step2').hide();
+            if (emailOrPhoneValue) {
+                $('#emailOrPhone').val(emailOrPhoneValue);
+            }
+            </text>
+        }
+
+        // Gửi OTP
+        $('#btnSendOTP').click(function () {
+            emailOrPhoneValue = $('#emailOrPhone').val().trim();
+            if (!emailOrPhoneValue) {
+                showMessage('Vui lòng nhập email hoặc số điện thoại.', 'danger');
+                // Luôn ở bước 1 cho nhập lại
+                $('#step1').show();
+                $('#step2').hide();
+                $('#otpCode').val('');
+                return;
+            }
+            // Disable button và hiển thị loading
+            $(this).prop('disabled', true).html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> Đang gửi...');
+            $.ajax({
+                url: '/User/SendOTP',
+                type: 'POST',
+                data: { emailOrPhone: emailOrPhoneValue },
+                dataType: 'json',
+                success: function (response) {
+                    if (response && response.success === true) {
+                        // Chỉ khi đúng email/sđt mới cho qua bước 2
+                        $('#step1').hide();
+                        $('#step2').show();
+                        $('#hiddenEmailOrPhone').val(emailOrPhoneValue);
+                        $('#otpMessage').hide();
+                        $('#errorMessage').hide();
+                        var emailDisplay = response.email;
+                        if (emailDisplay) {
+                            var atPos = emailDisplay.indexOf(String.fromCharCode(64));
+                            if (atPos > 3) {
+                                var emailPrefix = emailDisplay.substring(0, 3);
+                                var emailSuffix = emailDisplay.substring(atPos);
+                                emailDisplay = emailPrefix + '***' + emailSuffix;
+                            }
+                        }
+                        $('#sentEmail').text(emailDisplay || emailOrPhoneValue);
+                        $('#otpCode').val('').focus();
+                    } else {
+                        // Nếu sai thì luôn ở bước 1 cho nhập lại
+                        $('#step1').show();
+                        $('#step2').hide();
+                        $('#otpCode').val('');
+                        $('#errorMessage').hide();
+                        var errorMsg = (response && response.message) ? response.message : 'Có lỗi xảy ra. Vui lòng thử lại.';
+                        showMessage(errorMsg, 'danger');
+                    }
+                    $('#btnSendOTP').prop('disabled', false).html('<i class="glyphicon glyphicon-send"></i> Gửi mã OTP');
+                },
+                error: function () {
+                    $('#step1').show();
+                    $('#step2').hide();
+                    $('#otpCode').val('');
+                    $('#errorMessage').hide();
+                    showMessage('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
+                    $('#btnSendOTP').prop('disabled', false).html('<i class="glyphicon glyphicon-send"></i> Gửi mã OTP');
+                }
+            });
+        });
+
+        // Gửi lại OTP
+        $('#btnResendOTP').click(function () {
+            $('#emailOrPhone').val(emailOrPhoneValue);
+            $('#btnSendOTP').click();
+        });
+
+        // Thay đổi email/số điện thoại
+        $('#btnChangeEmail').click(function () {
+            $('#step2').hide();
+            $('#step1').show();
+            $('#emailOrPhone').val('').focus();
+            $('#otpCode').val('');
+            emailOrPhoneValue = '';
+        });
+
+        // Chỉ cho phép nhập số cho OTP
+        $('#otpCode').on('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Enter để gửi OTP
+        $('#emailOrPhone').keypress(function (e) {
+            if (e.which === 13) {
+                $('#btnSendOTP').click();
+            }
+        });
+
+        // Enter để submit OTP
+        $('#otpCode').keypress(function (e) {
+            if (e.which === 13) {
+                $('#otpForm').submit();
+            }
+        });
+
+        function showMessage(message, type) {
+            var alertClass = type === 'danger' ? 'alert-danger' : 'alert-success';
+            $('#otpMessage').removeClass('alert-danger alert-success')
+                           .addClass(alertClass)
+                           .html(message)
+                           .show();
+            setTimeout(function () {
+                $('#otpMessage').fadeOut();
+            }, 5000);
+        }
+    });
+</script>
+

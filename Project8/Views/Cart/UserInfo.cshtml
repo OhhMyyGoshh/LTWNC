@@ -1,0 +1,91 @@
+﻿@model WebBanSach.Models.Data.KhachHang
+<style>
+    .checkout-button {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ae2070;
+        padding: 5px;
+        border-radius: 5px
+    }
+    .checkout-button img {
+        padding-left: 10px;
+        height: 50px;
+        width: 50px;
+    }
+    .content{
+        padding-left: 15px;
+    }
+    .content .checkout-title{
+        color: #000;
+        font-size: 13pt;
+        font-weight: 600;
+    }
+    .content .description{
+        color: #666
+    }
+    input[type="radio"]:hover{
+        cursor: pointer;
+    }
+</style>
+<div class="section group">
+    <div style="width: 70%; margin: 0 auto;">
+        @using (Html.BeginForm("Payment", "Cart", FormMethod.Post))
+            {
+            <div class="form-group">
+                <h4>Thông tin khách hàng</h4>
+                <input name="MaKH" class="form-control" value="@Model.MaKH" type="hidden" />
+                <input id="appliedVoucher" name="MaVoucher" type="hidden" value="0" />
+            </div>
+            <div class="form-group">
+                <label>Họ tên khách hàng</label>
+                <input name="TenKH" class="form-control" value="@Model.TenKH" readonly="readonly" />              
+            </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input name="Email" type="email" class="form-control" value="@Model.Email" readonly="readonly" />  
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ</label>
+                    <input name="DiaChi" class="form-control" value="@Model.DiaChi" readonly="readonly" />
+                </div>
+                <div class="form-group">
+                    <label>Điện thoại</label>
+                    <input name="DienThoai" class="form-control" value="@Model.DienThoai" readonly="readonly" />
+                </div>
+                <div class="form-group">
+                    <label>Ghi chú đơn hàng (tùy chọn)</label>
+                    <textarea name="GhiChu" class="form-control" rows="3" placeholder="Ví dụ: Giao hàng giờ hành chính, gọi trước 15 phút..." maxlength="500"></textarea>
+                    <small class="text-muted">Tối đa 500 ký tự</small>
+                </div>
+                <div class="checkout-button">
+                    <div class="checkout-selector">
+                        <input type="radio" name="PaymentMethod" value="1" checked="checked" class="btn btn-m2 btn-checkout">
+                    </div>
+                    <div class="content" style="display: flex;align-items: center;">
+                        <span class="checkout-title">
+                            Thanh Toán Khi Nhận Hàng (COD)
+                        </span>
+                    </div>
+                </div>
+                <br/>
+                @* Tạm thời ẩn MoMo vì chưa cấu hình
+                <div class="checkout-button">
+                    <div class="checkout-selector">
+                        <input type="radio" name="PaymentMethod" value="2" class="btn btn-m2 btn-checkout">
+                    </div>
+                    <div class="content" style="display: flex;align-items: center;">
+                        <span class="checkout-title">
+                            Thanh toán bằng MoMo
+                        </span>
+                    </div>
+                </div>
+                <br/>
+                *@
+                <button type="submit" class="btn btn-success btn-lg btn-block">Đặt Hàng</button>
+        }
+    </div>
+
+</div>
+
+
+

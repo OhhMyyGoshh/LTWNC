@@ -1,0 +1,43 @@
+﻿
+@{
+    ViewBag.Title = "XacNhan";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Xác Nhận Đăng Ký Thành Viên</h2>
+<div class="alert alert-warning" id="previous">
+    <strong>Xác Nhận Tài Khoản</strong>
+    <input type="submit" class="btn btn-warning" value="Kích Hoạt" onclick="XacNhan()"/>
+</div>
+<div class="alert alert-success" id="after" style="display: none;">
+    <strong><span class="glyphicon glyphicon-ok"></span> Tài Khoản Đã Kích Hoạt Thành Công , Vui Lòng Đăng Nhập Lại Để Mua Hàng !</strong>
+    <p style="text-align: center; color: red;">Bạn Sẽ Được Chuyển Về Trang Mua Hàng Trong <span id="countdown"></span></p>
+</div>
+
+<script>
+    function XacNhan() {
+        $.ajax({
+            type: "POST",
+            url: "/User/XacNhanEmail",
+            data: { 'khMaKh': '@ViewBag.Makh' },
+            success:function(msg) {
+                $('#previous').hide();
+                $('#after').show();
+                alert(msg);
+                window.setTimeout(function () {
+                    window.location.href = '@Url.Action("Index", "Home")';
+                }, 10000);
+            }
+        });
+    }
+    var timeleft = 12;
+    var downloadTimer = setInterval(function () {
+        if (timeleft <= 0) {
+            clearInterval(downloadTimer);
+            document.getElementById("countdown").innerHTML = "0 s";
+        } else {
+            document.getElementById("countdown").innerHTML = timeleft + " s";
+        }
+        timeleft -= 1;
+    }, 1000);
+</script>

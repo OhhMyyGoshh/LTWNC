@@ -1,0 +1,64 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.LienHe>
+
+@{
+    ViewBag.Title = "Phản hồi";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Phản hồi từ khách hàng</h2>
+
+<table class="table" id="myTable">
+    <thead>
+        <tr>
+            <th>
+                Họ
+            </th>
+            <th>
+                Tên
+            </th>
+            <th>
+                Email
+            </th>
+            <th>
+                Điện thoại
+            </th>
+            <th>
+                Ngày cập nhật
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="row_@item.MaLH">
+                <td>
+                    @Html.DisplayFor(modelItem => item.Ho)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Ten)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Email)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DienThoai)
+                </td>
+                <td>
+                    @String.Format("{0:dd/MM/yyyy}", item.NgayCapNhat)
+                </td>
+                <td>
+                    @Html.ActionLink("Xem", "FeedDetail", new { id = item.MaLH }) |
+                    @Ajax.ActionLink("Xóa", "DeleteFeedBack", new { id = item.MaLH }, new AjaxOptions
+               {
+                   Confirm = "Bạn có muốn xóa phản hồi này không?",
+                   OnComplete = "$('#row_" + @item.MaLH + "').remove()",
+                   HttpMethod = "Delete"
+               })
+                </td>
+            </tr>
+        }
+    </tbody>
+
+</table>

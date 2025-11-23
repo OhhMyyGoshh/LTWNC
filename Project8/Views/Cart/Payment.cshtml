@@ -1,0 +1,145 @@
+﻿@using WebBanSach.Models.Data;
+@model List<WebBanSach.Models.CartModel>
+@{
+    ViewBag.Title = "Payment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section jsFooter{
+    <script src="/Content/Client/js/controller/cartController.js"></script>
+    <script>
+        var appliedVoucherId = 0;
+        var originalTotal = @ViewBag.Total;
+
+        $(document).ready(function () {
+            $('#btnApplyVoucher').click(function () {
+                var code = $('#txtVoucherCode').val().trim();
+                if (code === '') {
+                    showMessage('Vui lòng nhập mã voucher!', 'error');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Cart/ApplyVoucher',
+                    type: 'POST',
+                    data: { 
+                        maCode: code, 
+                        tongTien: originalTotal 
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            appliedVoucherId = response.maVoucher;
+                            var discount = response.giamGia;
+                            var newTotal = response.tongTienSauGiam;
+
+                            $('#discount').text('- ' + formatMoney(discount) + ' VND').show();
+                            $('#totalAmount').text(formatMoney(newTotal));
+                            $('#appliedVoucher').val(appliedVoucherId);
+                            
+                            showMessage(response.message, 'success');
+                            $('#btnApplyVoucher').text('Đã áp dụng').prop('disabled', true);
+                            $('#txtVoucherCode').prop('readonly', true);
+                        } else {
+                            showMessage(response.message, 'error');
+                        }
+                    },
+                    error: function () {
+                        showMessage('Có lỗi xảy ra, vui lòng thử lại!', 'error');
+                    }
+                });
+            });
+        });
+
+        function showMessage(msg, type) {
+            var messageBox = $('#voucherMessage');
+            messageBox.removeClass().addClass('alert alert-' + (type === 'success' ? 'success' : 'danger'));
+            messageBox.text(msg).show();
+            setTimeout(function() {
+                if(type !== 'success') {
+                    messageBox.fadeOut();
+                }
+            }, 5000);
+        }
+
+        function formatMoney(amount) {
+            return amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+    </script>
+}
+
+<h2 style="margin-bottom: 20px;">Thông tin đặt hàng</h2>
+@if (Model.Count > 0)
+{
+    <table id="cart" class="table table-condensed">
+        <thead>
+            <tr>
+                <th style="width:50%">Sản phẩm</th>
+                <th style="width:10%">Giá</th>
+                <th style="width:8%">Số lượng</th>
+                <th style="width:22%" class="text-center">Thành tiền</th>
+                <th style="width:10%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td data-th="Product">
+                        <div class="row">
+                            <div class="col-sm-2 hidden-xs"><img src="~/images/@item.sach.AnhBia" alt="@item.sach.AnhBia" class="img-responsive" /></div>
+                            <div class="col-sm-10">
+                                <h4 class="nomargin">@item.sach.TenSach</h4>
+                            </div>
+                        </div>
+                    </td>
+                    <td data-th="Price">@item.sach.GiaBan.GetValueOrDefault(0).ToString("N0") VND</td>
+                    <td data-th="Quantity">
+                        <input type="number" style="border: none;" class="txtQuantity" readonly="readonly" data-id="@item.sach.MaSach" value="@item.Quantity">
+                    </td>
+                    <td data-th="Subtotal" class="text-center">@((item.sach.GiaBan.GetValueOrDefault(0) * item.Quantity).ToString("N0")) VND</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr class="visible-xs">
+                <td class="text-center"><strong>Tổng cộng: @String.Format("{0:0,0}", ViewBag.Total) VND</strong></td>
+            </tr>
+            <tr id="voucherRow">
+                <td colspan="3">
+                    <div class="input-group" style="max-width: 400px;">
+                        <input type="text" id="txtVoucherCode" class="form-control" placeholder="Nhập mã giảm giá (VD: GIAM10K)" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-primary" type="button" id="btnApplyVoucher">Áp dụng</button>
+                        </span>
+                    </div>
+                    <small id="voucherMessage" style="display:none; margin-top:5px;"></small>
+                </td>
+                <td class="hidden-xs text-center">
+                    <span id="discount" style="color: #d9534f; font-weight: bold; display: none;"></span>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="/Cart" class="btn btn-warning"><i class="fa fa-angle-left"></i> Trở về</a>
+                </td>
+                <td colspan="2" class="hidden-xs"></td>
+                <td class="hidden-xs text-center">
+                    <strong>Tổng cộng: <span id="totalAmount">@String.Format("{0:0,0}", ViewBag.Total)</span> VND</strong>
+                </td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    
+        @Html.Action("UserInfo", "Cart")
+    
+  
+}
+else
+{
+    <span class="alert alert-danger">Chưa có sản phẩm nào trong giỏ hàng</span>
+    <br />
+    <a href="/Home/" style="margin-top: 20px;" class="btn btn-warning"> Tiếp tục mua hàng</a>
+}
+
+

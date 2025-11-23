@@ -1,0 +1,47 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.ChiTietDDH>
+
+@{
+    ViewBag.Title = "DetailsOrder";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Chi tiết đơn hàng</h2>
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.DonDatHang.MaDDH)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Sach.TenSach)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.SoLuong)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.DonGia)
+        </th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.DonDatHang.MaDDH)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Sach.TenSach)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.SoLuong)
+        </td>
+        <td>
+            <p>@String.Format("{0:0,0}", item.DonGia) VND</p>
+        </td>
+    </tr>
+}
+
+</table>
+
+<div>
+    @Html.ActionLink("Trở về", "Order")
+</div>

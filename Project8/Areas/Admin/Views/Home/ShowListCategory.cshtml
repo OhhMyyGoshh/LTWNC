@@ -1,0 +1,43 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.TheLoai>
+
+@{
+    ViewBag.Title = "ShowListCategory";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Quản lý thể loại</h2>
+
+<p>
+    @Html.ActionLink("Thêm thể loại", "AddCategory")
+</p>
+<table class="table" id="myTable">
+    <thead>
+        <tr>
+            <th>Mã loại</th>
+            <th>Tên Loại</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="row_@item.MaLoai">
+                <td>
+                    @Html.DisplayFor(modelItem => item.MaLoai)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TenLoai)
+                </td>
+                <td>
+                    @Html.ActionLink("Xem", "UpdateCategory", new { id = item.MaLoai }) |
+                    @Ajax.ActionLink("Xóa", "DeleteCategory", new { id = item.MaLoai }, new AjaxOptions
+               {
+                   Confirm = "Bạn có muốn xóa thể loại này không?",
+                   OnComplete = "$('#row_" + @item.MaLoai + "').remove()",
+                   HttpMethod = "Delete"
+               })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

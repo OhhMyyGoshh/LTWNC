@@ -1,0 +1,19 @@
+﻿@{
+    ViewBag.Title = "Xác thực 2 yếu tố (2FA)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container" style="max-width:400px;margin-top:40px;">
+    <h3 class="text-center">Xác thực 2 yếu tố (2FA)</h3>
+    <p class="text-info">Mã xác thực đã được gửi tới email của bạn.</p>
+    @using (Html.BeginForm("Login2FA", "User", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="TaiKhoan" value="@ViewBag.TaiKhoan" />
+        <div class="form-group">
+            <label for="OTPCode">Nhập mã xác thực OTP:</label>
+            <input type="text" class="form-control" name="OTPCode" maxlength="6" autocomplete="one-time-code" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Xác thực</button>
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    }
+</div>
