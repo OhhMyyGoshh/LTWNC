@@ -591,8 +591,20 @@ namespace WebBanSach.Controllers
                     }
                     else if (kh.TrangThai == false)
                     {
-                        ModelState.AddModelError("", "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt tài khoản.");
+                        // false + còn ResetPasswordToken => tài khoản mới đăng ký, chưa kích hoạt
+                        if (!string.IsNullOrEmpty(kh.ResetPasswordToken))
+                        {
+                            ModelState.AddModelError("",
+                                "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt tài khoản.");
+                        }
+                        else
+                        {
+                            // false + ResetPasswordToken == null => tài khoản đã từng kích hoạt nhưng đã bị khoá bởi Admin
+                            ModelState.AddModelError("",
+                                "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.");
+                        }
                     }
+
                     else if (kh.Enable2FA)
                     {
                         // Sinh mã OTP 6 số, hiệu lực 5 phút
@@ -717,8 +729,18 @@ namespace WebBanSach.Controllers
                     }
                     else if (kh != null && kh.TrangThai == false)
                     {
-                        ModelState.AddModelError("", "Tài khoản chưa được kích hoạt.");
+                        if (!string.IsNullOrEmpty(kh.ResetPasswordToken))
+                        {
+                            ModelState.AddModelError("",
+                                "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt tài khoản.");
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("",
+                                "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.");
+                        }
                     }
+
                     else
                     {
                         ModelState.AddModelError("", "Không tìm thấy thông tin người dùng.");

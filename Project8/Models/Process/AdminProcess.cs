@@ -461,6 +461,23 @@ namespace WebBanSach.Models.Process
         {
             return db.KhachHangs.OrderBy(x => x.MaKH).ToList();
         }
+        /// <summary>
+        /// hàm thay đổi trạng thái người dùng (kích hoạt / khóa)
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>bool - true: đang kích hoạt, false: đã khóa / chưa kích hoạt</returns>
+        public bool ChangeStatusUser(int id)
+        {
+            var kh = db.KhachHangs.SingleOrDefault(x => x.MaKH == id);
+            if (kh == null) return false;
+
+            // TrangThai là bool => đảo true/false
+            kh.TrangThai = !kh.TrangThai;
+
+            db.SaveChanges();
+
+            return kh.TrangThai;
+        }
 
         /// <summary>
         /// hàm xóa người dùng

@@ -560,6 +560,19 @@ namespace WebBanSach.Areas.Admin.Controllers
 
             return View(result);
         }
+        [HttpPost]
+        public JsonResult ChangeUserStatus(int id)
+        {
+            var process = new AdminProcess();
+            var status = process.ChangeStatusUser(id);
+
+            return Json(new
+            {
+                success = true,
+                status = status
+            }, JsonRequestBehavior.AllowGet);
+        }
+
 
         //DELETE : Admin/Home/DeleteUser/:id : xóa thông tin người dùng
         [HttpDelete]
