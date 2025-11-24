@@ -560,6 +560,7 @@ namespace WebBanSach.Areas.Admin.Controllers
 
             return View(result);
         }
+
         [HttpPost]
         public JsonResult ChangeUserStatus(int id)
         {
@@ -572,7 +573,6 @@ namespace WebBanSach.Areas.Admin.Controllers
                 status = status
             }, JsonRequestBehavior.AllowGet);
         }
-
 
         //DELETE : Admin/Home/DeleteUser/:id : xóa thông tin người dùng
         [HttpDelete]
@@ -596,35 +596,28 @@ namespace WebBanSach.Areas.Admin.Controllers
                 .Include(x => x.Voucher)
                 .AsQueryable();
 
-            // Debug - log parameters
-            System.Diagnostics.Debug.WriteLine($"Filter - FromDate: {fromDate}, ToDate: {toDate}, Status: {status}");
-
             // Lọc theo ngày
             if (fromDate.HasValue)
             {
-                var startDate = fromDate.Value.Date; // Lấy đầu ngày
+                var startDate = fromDate.Value.Date;
                 query = query.Where(x => x.NgayDat >= startDate);
-                System.Diagnostics.Debug.WriteLine($"Filtering from: {startDate}");
             }
             if (toDate.HasValue)
             {
-                var endDate = toDate.Value.Date.AddDays(1).AddSeconds(-1); // Cuối ngày
+                var endDate = toDate.Value.Date.AddDays(1).AddSeconds(-1);
                 query = query.Where(x => x.NgayDat <= endDate);
-                System.Diagnostics.Debug.WriteLine($"Filtering to: {endDate}");
             }
 
             // Lọc theo trạng thái
             if (status.HasValue)
             {
                 query = query.Where(x => x.TrangThaiDonHang == status.Value);
-                System.Diagnostics.Debug.WriteLine($"Filtering status: {status.Value}");
             }
 
             var result = query.OrderByDescending(x => x.MaDDH).ToList();
-            System.Diagnostics.Debug.WriteLine($"Total orders found: {result.Count}");
 
-            ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
-            ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
+            ViewBag.FromDate = fromDate.HasValue ? fromDate.Value.ToString("yyyy-MM-dd") : null;
+            ViewBag.ToDate = toDate.HasValue ? toDate.Value.ToString("yyyy-MM-dd") : null;
             ViewBag.Status = status;
             ViewBag.TotalOrders = result.Count();
             ViewBag.HasFilter = fromDate.HasValue || toDate.HasValue || status.HasValue;
@@ -640,35 +633,22 @@ namespace WebBanSach.Areas.Admin.Controllers
             return View(result);
         }
 
-        //POST : /Admin/Home/UpdateOrderStatus : cập nhật trạng thái đơn hàng
+        //POST : /Admin/Home/UpdateOrderStatus : cập nhật trạng thái đơn hàng (gọi AdminProcess để trừ tồn)
         [HttpPost]
         public JsonResult UpdateOrderStatus(int orderId, int status)
         {
             try
             {
-                var db = new BSDBContext();
-                var order = db.DonDatHangs.Find(orderId);
-                
-                if (order == null)
+                var process = new AdminProcess();
+                string message;
+                bool ok = process.UpdateOrderStatusAndStock(orderId, status, out message);
+
+                if (!ok)
                 {
-                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+                    return Json(new { success = false, message = message }, JsonRequestBehavior.AllowGet);
                 }
 
-                order.TrangThaiDonHang = status;
-                db.Entry(order).State = EntityState.Modified;
-                db.SaveChanges();
-
-                string statusText = "";
-                switch (status)
-                {
-                    case 0: statusText = "Chờ xác nhận"; break;
-                    case 1: statusText = "Đã xác nhận"; break;
-                    case 2: statusText = "Đang giao hàng"; break;
-                    case 3: statusText = "Đã giao"; break;
-                    case 4: statusText = "Đã hủy"; break;
-                }
-
-                return Json(new { success = true, message = "Đã cập nhật trạng thái: " + statusText }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, message = message }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
@@ -678,5 +658,90 @@ namespace WebBanSach.Areas.Admin.Controllers
 
         #endregion
 
+        #region Voucher
+
+        // GET: /Admin/Home/Voucher
+        [HttpGet]
+        public ActionResult Voucher()
+        {
+            var model = new AdminProcess().ListAllVoucher();
+            return View(model);
+        }
+
+        // GET: /Admin/Home/AddVoucher
+        [HttpGet]
+        public ActionResult AddVoucher()
+        {
+            return View();
+        }
+
+        // POST: /Admin/Home/AddVoucher
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddVoucher(Voucher model)
+        {
+            if (ModelState.IsValid)
+            {
+                var process = new AdminProcess();
+
+                if (!model.NgayBatDau.HasValue)
+                {
+                    model.NgayBatDau = DateTime.Now;
+                }
+
+                int id = process.InsertVoucher(model);
+                if (id > 0)
+                {
+                    TempData["Success"] = "Thêm voucher thành công.";
+                    return RedirectToAction("Voucher");
+                }
+
+                ModelState.AddModelError("", "Thêm voucher không thành công.");
+            }
+
+            return View(model);
+        }
+
+        // GET: /Admin/Home/UpdateVoucher/5
+        [HttpGet]
+        public ActionResult UpdateVoucher(int id)
+        {
+            var vc = new AdminProcess().GetIdVoucher(id);
+            if (vc == null) return HttpNotFound();
+            return View(vc);
+        }
+
+        // POST: /Admin/Home/UpdateVoucher
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateVoucher(Voucher model)
+        {
+            if (ModelState.IsValid)
+            {
+                var process = new AdminProcess();
+                int result = process.UpdateVoucher(model);
+                if (result == 1)
+                {
+                    TempData["Success"] = "Cập nhật voucher thành công.";
+                    return RedirectToAction("Voucher");
+                }
+
+                ModelState.AddModelError("", "Cập nhật voucher không thành công.");
+            }
+
+            return View(model);
+        }
+
+        // DELETE: /Admin/Home/DeleteVoucher/5
+        [HttpDelete]
+        public ActionResult DeleteVoucher(int id)
+        {
+            new AdminProcess().DeleteVoucher(id);
+            return RedirectToAction("Voucher");
+        }
+
+        #endregion
+
     }
+
 }

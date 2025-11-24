@@ -1,71 +1,143 @@
 ﻿@model IEnumerable<WebBanSach.Models.Data.Sach>
 
 @{
-    ViewBag.Title = "ShowListBook";
+    ViewBag.Title = "Quản lý sách";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<h2>Quản lý sách</h2>
+<h2 class="page-title">📚 Quản lý sách</h2>
 
 <p>
-    @Html.ActionLink("Thêm sách", "AddBook")
+    @Html.ActionLink("➕ Thêm sách", "AddBook", null, new { @class = "btn btn-primary mb-3" })
 </p>
-<table class="table" id="myTable">
-    <thead>
-        <tr>
-            <th>
-                Mã
-            </th>
-            <th width="320">
-                Tên Sách
-            </th>
-            <th>
-                Ảnh Bìa
-            </th>
-            <th>
-                Giá Bán
-            </th>
-            <th>
-                Ngày Cập Nhật
-            </th>
-            <th>
-                Số Lượng
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr id="row_@item.MaSach">
-                <td>
-                    @Html.DisplayFor(modelItem => item.MaSach)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.TenSach)
-                </td>
-                <td>
-                    <img src="/images/@item.AnhBia" width="105" height="140" />
-                </td>
-                <td>
-                    <span>@(item.GiaBan.HasValue ? item.GiaBan.Value.ToString("N0") : "Liên hệ") VND</span>
-                </td>
-                <td>
-                    @String.Format("{0:dd/MM/yyyy}", item.NgayCapNhat)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.SoLuongTon)
-                </td>
-                <td>
-                    @Html.ActionLink("Xem", "DetailsBook", new { id = item.MaSach }) |
-                    @Ajax.ActionLink("Xóa", "DeleteBook", new { id = item.MaSach }, new AjaxOptions
-               {
-                   Confirm = "Bạn có muốn xóa cuốn sách này không?",
-                   OnComplete = "$('#row_" + @item.MaSach + "').remove()",
-                   HttpMethod = "Delete"
-               })
-                </td>
-            </tr>
+
+<div class="panel panel-default shadow-sm">
+    <div class="panel-heading" style="font-weight:600;">
+        Danh sách sách trong kho
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle" id="bookTable">
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th style="width: 300px;">Tên Sách</th>
+                    <th>Ảnh Bìa</th>
+                    <th class="text-right">Giá Bán</th>
+                    <th>Ngày Cập Nhật</th>
+                    <th class="text-center">Tình Trạng</th>
+                    <th class="text-center">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var soTon = item.SoLuongTon.HasValue ? item.SoLuongTon.Value : 0;
+
+                    <tr id="row_@item.MaSach">
+                        <td><strong>@item.MaSach</strong></td>
+                        <td>@item.TenSach</td>
+                        <td>
+                            <img src="~/images/@item.AnhBia"
+                                 alt="@item.TenSach"
+                                 class="book-thumb"
+                                 title="@item.TenSach" />
+                        </td>
+                        <td class="text-right">
+                            @(item.GiaBan.HasValue ? item.GiaBan.Value.ToString("N0") + " VND" : "Liên hệ")
+                        </td>
+                        <td>@String.Format("{0:dd/MM/yyyy}", item.NgayCapNhat)</td>
+                        <td class="text-center">
+                            @if (soTon <= 0)
+                            {
+                                <span class="badge badge-danger" title="Đã hết hàng">
+                                    <i class="fa fa-times-circle"></i> Hết hàng
+                                </span>
+                            }
+                            else if (soTon <= 5)
+                            {
+                                <span class="badge badge-warning" title="Số lượng thấp">
+                                    <i class="fa fa-exclamation-triangle"></i> @soTon (Sắp hết)
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-success" title="Còn hàng">
+                                    <i class="fa fa-check-circle"></i> @soTon
+                                </span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            @Html.ActionLink("🔍 Xem", "DetailsBook", new { id = item.MaSach },
+                                new { @class = "btn btn-info btn-xs", style = "margin-right:5px;" })
+                            @Ajax.ActionLink("🗑 Xóa", "DeleteBook", new { id = item.MaSach },
+                                new AjaxOptions
+                                {
+                                    Confirm = "Bạn có muốn xóa cuốn sách này không?",
+                                    OnComplete = "$('#row_" + item.MaSach + "').fadeOut()",
+                                    HttpMethod = "Delete"
+                                },
+                                new { @class = "btn btn-danger btn-xs" })
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .page-title {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-weight: 600;
+        font-size: 22px;
+    }
+
+    .book-thumb {
+        width: 70px;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.15);
+        transition: transform .2s;
+    }
+
+        .book-thumb:hover {
+            transform: scale(1.05);
         }
-    </tbody>
-</table>
+
+    .badge {
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .badge-danger {
+        background-color: #d9534f;
+        color: #fff;
+    }
+
+    .badge-warning {
+        background-color: #f0ad4e;
+        color: #fff;
+    }
+
+    .badge-success {
+        background-color: #5cb85c;
+        color: #fff;
+    }
+</style>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#bookTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json"
+                },
+                "order": [[0, "asc"]],
+                "pageLength": 10
+            });
+        });
+    </script>
+}

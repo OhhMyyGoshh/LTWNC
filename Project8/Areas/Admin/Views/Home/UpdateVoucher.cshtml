@@ -1,0 +1,95 @@
+﻿@model WebBanSach.Models.Data.Voucher
+
+@{
+    ViewBag.Title = "Cập nhật voucher";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Cập nhật voucher</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.MaVoucher)
+
+    <div class="form-horizontal">
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.MaCode, "Mã code", new { @class = "control-label col-md-2" })
+            <div class="col-md-4">
+                @Html.TextBoxFor(m => m.MaCode, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.MaCode, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.TenVoucher, "Tên voucher", new { @class = "control-label col-md-2" })
+            <div class="col-md-6">
+                @Html.TextBoxFor(m => m.TenVoucher, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.TenVoucher, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.Label("Loại giảm giá", new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                <select name="LoaiGiamGia" class="form-control">
+                    <option value="">-- Chọn loại --</option>
+                    <option value="false" @(Model != null && (!Model.LoaiGiamGia.HasValue || Model.LoaiGiamGia == false) ? "selected=\"selected\"" : "")>Giảm theo %</option>
+                    <option value="true" @(Model != null && Model.LoaiGiamGia.HasValue && Model.LoaiGiamGia == true ? "selected=\"selected\"" : "")>Giảm theo số tiền</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.GiaTriGiam, "Giá trị giảm", new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.TextBoxFor(m => m.GiaTriGiam, new { @class = "form-control", type = "number", step = "0.01", min = "0" })
+                <span class="help-block">Nếu giảm %, nhập 5, 10, 15... Nếu giảm tiền, nhập số tiền (đ).</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.GiaTriDonHangToiThieu, "ĐH tối thiểu (đ)", new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.TextBoxFor(m => m.GiaTriDonHangToiThieu, new { @class = "form-control", type = "number", step = "1000", min = "0" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.SoLuong, "Số lượng", new { @class = "control-label col-md-2" })
+            <div class="col-md-2">
+                @Html.TextBoxFor(m => m.SoLuong, new { @class = "form-control", type = "number", min = "0" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.Label("Thời gian áp dụng", new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.TextBoxFor(m => m.NgayBatDau, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+            </div>
+            <div class="col-md-3">
+                @Html.TextBoxFor(m => m.NgayKetThuc, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.Label("Trạng thái", new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                <select name="TrangThai" class="form-control">
+                    <option value="true" @(Model != null && Model.TrangThai.HasValue && Model.TrangThai == true ? "selected=\"selected\"" : "")>Kích hoạt</option>
+                    <option value="false" @(Model != null && Model.TrangThai.HasValue && Model.TrangThai == false ? "selected=\"selected\"" : "")>Khóa</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Lưu" class="btn btn-primary" />
+                @Html.ActionLink("Hủy", "Voucher", null, new { @class = "btn btn-default", style = "margin-left:5px;" })
+            </div>
+        </div>
+    </div>
+}

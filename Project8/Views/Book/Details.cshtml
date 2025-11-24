@@ -4,6 +4,13 @@
     ViewBag.Title = "Chi tiết sách";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@if (TempData["CartError"] != null)
+{
+    <div class="alert alert-danger mt-3">
+        @TempData["CartError"]
+    </div>
+}
+
 
 <div class="row" style="margin-top:20px;">
     <!-- Ảnh sách -->
@@ -45,7 +52,8 @@
         }
 
         @{
-            var conHang = Model.SoLuongTon > 0;
+            var soTon = Model.SoLuongTon ?? 0;
+            var conHang = soTon > 0;
         }
 
         <p style="margin-top:6px; font-size:14px;">
@@ -53,7 +61,7 @@
             @if (conHang)
             {
                 <span style="color:#5cb85c; font-weight:600;">Còn hàng</span>
-                <span style="color:#999; font-size:13px;">(Còn @Model.SoLuongTon sản phẩm)</span>
+                <span style="color:#999; font-size:13px;">(Còn @soTon sản phẩm)</span>
             }
             else
             {
@@ -61,24 +69,33 @@
             }
         </p>
 
-        @using (Html.BeginForm("AddItem", "Cart", FormMethod.Get, new { @class = "form-inline", style = "margin-top:10px;" }))
+        @if (conHang)
         {
-            @Html.Hidden("id", Model.MaSach)
+            using (Html.BeginForm("AddItem", "Cart", FormMethod.Get, new { @class = "form-inline", style = "margin-top:10px;" }))
+            {
+                @Html.Hidden("id", Model.MaSach)
 
-            <label for="quantity" style="margin-right:8px; font-weight:600;">Số lượng:</label>
-            <input type="number"
-                   id="quantity"
-                   name="quantity"
-                   value="1"
-                   min="1"
-                   class="form-control"
-                   style="width:80px; display:inline-block; margin-right:12px;" />
+                <label for="quantity" style="margin-right:8px; font-weight:600;">Số lượng:</label>
+                <input type="number"
+                       id="quantity"
+                       name="quantity"
+                       value="1"
+                       min="1"
+                       class="form-control"
+                       style="width:80px; display:inline-block; margin-right:12px;" />
 
-            <button type="submit"
-                    class="btn btn-warning btn-large"
-                    style="padding:8px 20px; border-radius:20px; font-weight:600;">
-                THÊM VÀO GIỎ HÀNG
-            </button>
+                <button type="submit"
+                        class="btn btn-warning btn-large"
+                        style="padding:8px 20px; border-radius:20px; font-weight:600;">
+                    THÊM VÀO GIỎ HÀNG
+                </button>
+            }
+        }
+        else
+        {
+            <p class="text-danger" style="margin-top:10px; font-weight:600;">
+                Sản phẩm đã hết hàng, không thể thêm vào giỏ.
+            </p>
         }
     </div>
 </div>
@@ -89,3 +106,5 @@
 <div class="row related-books-row">
     @Html.Action("RelatedBooks", "Book", new { id = Model.MaSach })
 </div>
+
+

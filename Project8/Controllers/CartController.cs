@@ -38,10 +38,14 @@ namespace WebBanSach.Controllers
             }
             ViewBag.Quantity = sl;
             ViewBag.Total = total;
+
+            // Thông báo lỗi (hết hàng / vượt tồn kho) nếu có
+            ViewBag.CartError = TempData["CartError"];
+
             return View(list);
         }
 
-        //GET : /Cart/CartHeader : đếm sổ sản phẩm trong giỏ hàng
+        //GET : /Cart/CartHeader : đếm số sản phẩm trong giỏ hàng
         //PartialView : CartHeader
         public ActionResult CartHeader()
         {
@@ -109,51 +113,49 @@ namespace WebBanSach.Controllers
         //GET : /Cart/AddItem/?id=?&quantity=1 : thêm sản phẩm vào giỏ hàng
         public ActionResult AddItem(int id, int quantity)
         {
-            //lấy mã sách và gán đối tượng
+            // Lấy thông tin sách
             var sach = new AdminProcess().GetIdBook(id);
-
-            //lấy giỏ hàng từ session
-            var cart = Session[CartSession];
-
-            //nếu đã có sản phẩm trong giỏ hàng
-            if (cart != null)
+            if (sach == null)
             {
-                var list = (List<CartModel>)cart;
-                if (list.Exists(x => x.sach.MaSach == id))
-                {
+                TempData["CartError"] = "Không tìm thấy sách.";
+                return RedirectToAction("Index");
+            }
 
-                    foreach (var item in list)
-                    {
-                        if (item.sach.MaSach == id)
-                        {
-                            item.Quantity += quantity;
-                        }
-                    }
-                }
-                else
-                {
-                    //tạo mới đối tượng cart item
-                    var item = new CartModel();
-                    item.sach = sach;
-                    item.Quantity = quantity;
-                    list.Add(item);
-                }
+            int soTon = sach.SoLuongTon ?? 0;
+            if (soTon <= 0)
+            {
+                TempData["CartError"] = "Sản phẩm đã hết hàng, không thể thêm vào giỏ.";
+                return RedirectToAction("Details", "Book", new { id = id });
+            }
 
-                //Gán vào session
-                Session[CartSession] = list;
+            // Lấy giỏ hàng từ session
+            var cart = Session[CartSession] as List<CartModel> ?? new List<CartModel>();
+
+            var existingItem = cart.FirstOrDefault(x => x.sach.MaSach == id);
+            int currentQty = existingItem != null ? existingItem.Quantity : 0;
+
+            if (currentQty + quantity > soTon)
+            {
+                TempData["CartError"] = "Sản phẩm chỉ còn " + soTon + " bản, bạn không thể thêm " + quantity + " nữa.";
+                return RedirectToAction("Details", "Book", new { id = id });
+            }
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += quantity;
             }
             else
             {
-                //tạo mới giỏ hàng
-                var item = new CartModel();
-                item.sach = sach;
-                item.Quantity = quantity;
-                var list = new List<CartModel>();
-                list.Add(item);
-
-                //gán vào session
-                Session[CartSession] = list;
+                var item = new CartModel
+                {
+                    sach = sach,
+                    Quantity = quantity
+                };
+                cart.Add(item);
             }
+
+            // Gán lại session
+            Session[CartSession] = cart;
 
             return RedirectToAction("Index");
         }
@@ -222,118 +224,139 @@ namespace WebBanSach.Controllers
                 }
                 ViewBag.Quantity = sl;
                 ViewBag.Total = total;
+
+                ViewBag.CartError = TempData["CartError"];
+
                 return View(list);
             }
         }
+
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         [HttpPost]
         public ActionResult Payment(int MaKH, FormCollection f)
         {
-            var PMethod = int.Parse(f["PaymentMethod"]);
-            var maVoucher = int.Parse(f["MaVoucher"] ?? "0");
-            
+            int PMethod = 1;
+            int tmp;
+            if (int.TryParse(f["PaymentMethod"], out tmp))
+            {
+                PMethod = tmp;
+            }
+
+            int maVoucher = 0;
+            int.TryParse(f["MaVoucher"], out maVoucher);
+
+            // Lấy giỏ hàng
+            var cart = Session[CartSession] as List<CartModel>;
+            if (cart == null || !cart.Any())
+            {
+                TempData["CartError"] = "Giỏ hàng trống.";
+                return RedirectToAction("Index");
+            }
+
+            // ===== CHECK TỒN KHO TRƯỚC KHI TẠO ĐƠN (KHÔNG TRỪ TỒN Ở ĐÂY) =====
+            foreach (var item in cart)
+            {
+                var sachDb = db.Saches.Find(item.sach.MaSach);
+                if (sachDb == null)
+                {
+                    TempData["CartError"] = "Không tìm thấy sản phẩm trong hệ thống.";
+                    return RedirectToAction("Index");
+                }
+
+                int soTon = sachDb.SoLuongTon ?? 0;
+                if (soTon <= 0)
+                {
+                    TempData["CartError"] = "Sản phẩm '" + sachDb.TenSach + "' đã hết hàng, vui lòng xoá khỏi giỏ.";
+                    return RedirectToAction("Index");
+                }
+
+                if (item.Quantity > soTon)
+                {
+                    TempData["CartError"] = "Sản phẩm '" + sachDb.TenSach + "' chỉ còn " + soTon + " bản, vui lòng điều chỉnh số lượng.";
+                    return RedirectToAction("Index");
+                }
+            }
+            // ===================================================================
+
             var order = new DonDatHang();
             order.NgayDat = DateTime.Now;
             order.NgayGiao = DateTime.Now.AddDays(3);
-            order.TinhTrang = true; //đã nhận hàng
+            order.TinhTrang = true; //đã nhận hàng (trạng thái thanh toán)
             order.MaKH = MaKH;
             order.GhiChu = f["GhiChu"];
-            
+            order.ThanhToan = PMethod;   // 1: COD (hoặc các phương thức khác nếu sau này mở rộng)
+            order.TrangThaiDonHang = 0;  // Chờ xác nhận
+            order.MaVoucher = null;
+            order.GiamGia = 0;
+
             try
             {
-                if (PMethod == 1)
+                var cartCOD = cart;
+                decimal? total = cartCOD.Sum(x => x.Total);
+
+                // Áp dụng voucher nếu có
+                if (maVoucher > 0)
                 {
-                    //thêm dữ liệu vào đơn đặt hàng
-                    order.ThanhToan = 1;
-                    order.TrangThaiDonHang = 0; // Chờ xác nhận
-                    order.MaVoucher = null;
-                    order.GiamGia = 0;
-                    
-                    var cart = (List<CartModel>)Session[CartSession];
-                    decimal? total = cart.Sum(x => x.Total);
-                    
-                    // Áp dụng voucher nếu có
-                    if (maVoucher > 0)
+                    try
                     {
-                        try
+                        var voucher = db.Vouchers.Find(maVoucher);
+                        if (voucher != null)
                         {
-                            var voucher = db.Vouchers.Find(maVoucher);
-                            if (voucher != null)
+                            var voucherProcess = new VoucherProcess();
+                            var voucherResult = voucherProcess.ApplyVoucher(
+                                voucher.MaCode,
+                                total.GetValueOrDefault(0),
+                                MaKH
+                            );
+
+                            if (voucherResult.Success)
                             {
-                                var voucherProcess = new VoucherProcess();
-                                var voucherResult = voucherProcess.ApplyVoucher(
-                                    voucher.MaCode, 
-                                    total.GetValueOrDefault(0), 
-                                    MaKH
-                                );
-                                
-                                if (voucherResult.Success)
-                                {
-                                    order.MaVoucher = maVoucher;
-                                    order.GiamGia = (decimal)voucherResult.GiamGia;
-                                }
+                                order.MaVoucher = maVoucher;
+                                order.GiamGia = (decimal)voucherResult.GiamGia;
                             }
                         }
-                        catch
-                        {
-                            // Nếu voucher lỗi, vẫn cho đặt hàng bình thường
-                        }
                     }
-                    
-                    var result1 = new OrderProcess().Insert(order);
-                    
-                    // Lưu chi tiết đơn hàng
-                    var result2 = new OderDetailProcess();
-                    foreach (var item in cart)
+                    catch
                     {
-                        var orderDetail = new ChiTietDDH();
-                        orderDetail.MaSach = item.sach.MaSach;
-                        orderDetail.MaDDH = result1;
-                        orderDetail.SoLuong = item.Quantity;
-                        orderDetail.DonGia = item.sach.GiaBan;
-                        result2.Insert(orderDetail);
+                        // Nếu voucher lỗi, vẫn cho đặt hàng bình thường
                     }
-                    
-                    // Đánh dấu voucher đã sử dụng
-                    if (maVoucher > 0 && order.MaVoucher != null)
-                    {
-                        try
-                        {
-                            new VoucherProcess().UseVoucher(maVoucher, MaKH, result1);
-                        }
-                        catch
-                        {
-                            // Log lỗi nhưng không ảnh hưởng đơn hàng
-                        }
-                    }
-
-                    Session[CartSession] = null;
-                    return Redirect("/Cart/Success");
                 }
-                else
+
+                // Tạo đơn hàng
+                var result1 = new OrderProcess().Insert(order);
+
+                // Lưu chi tiết đơn hàng
+                var result2 = new OderDetailProcess();
+                foreach (var item in cartCOD)
                 {
-                    order.ThanhToan = 0;
-                    var result1 = new OrderProcess().Insert(order);
-                    var cart = (List<CartModel>)Session[CartSession];
-                    var result2 = new OderDetailProcess();
-                    decimal? total = 0;
-                    foreach (var item in cart)
-                    {
-                        var orderDetail = new ChiTietDDH();
-                        orderDetail.MaSach = item.sach.MaSach;
-                        orderDetail.MaDDH = result1;
-                        orderDetail.SoLuong = item.Quantity;
-                        orderDetail.DonGia = item.sach.GiaBan;
-                        result2.Insert(orderDetail);
-
-                        total = cart.Sum(x => x.Total);
-                    }
-                    Session[CartSession] = null;
-                    return Redirect(ThanhToanMoMo(result1.ToString(), 
-                        total.ToString().Substring(0, total.ToString().Length - 5)));
-                    
-
+                    var orderDetail = new ChiTietDDH();
+                    orderDetail.MaSach = item.sach.MaSach;
+                    orderDetail.MaDDH = result1;
+                    orderDetail.SoLuong = item.Quantity;
+                    orderDetail.DonGia = item.sach.GiaBan;
+                    result2.Insert(orderDetail);
                 }
+
+                // KHÔNG TRỪ TỒN KHO Ở ĐÂY
+                // Tồn kho chỉ trừ khi ADMIN hoặc KHÁCH HÀNG xác nhận ĐÃ GIAO (status = 3)
+                // trong Admin/Home/UpdateOrderStatus hoặc Cart/ConfirmReceived
+
+                // Đánh dấu voucher đã sử dụng
+                if (maVoucher > 0 && order.MaVoucher != null)
+                {
+                    try
+                    {
+                        new VoucherProcess().UseVoucher(maVoucher, MaKH, result1);
+                    }
+                    catch
+                    {
+                        // Log lỗi nhưng không ảnh hưởng đơn hàng
+                    }
+                }
+
+                Session[CartSession] = null;
+                return Redirect("/Cart/Success");
             }
             catch (Exception ex)
             {
@@ -343,72 +366,12 @@ namespace WebBanSach.Controllers
                 {
                     System.Diagnostics.Debug.WriteLine("Inner Exception: " + ex.InnerException.Message);
                 }
-                
+
                 ViewBag.ErrorMessage = ex.Message;
                 return Redirect("/Cart/Error");
             }
-
-            return new EmptyResult();
-
         }
 
-        protected string ThanhToanMoMo(string maDonHang,string tongCong)
-        {
-            string endpoint = "https://test-payment.momo.vn/gw_payment/transactionProcessor";
-            string partnerCode = "MOMOHDRK20200430";
-            string accessKey = "68tVdaHzCcvtfzwH";
-            string serectkey = "8AWejATXBF96XL3CqeICtqiiKwheEUAv";
-            string orderInfo = "OrderBook";
-            string returnUrl = Url.Action("Success", "Cart", null, protocol: Request.Url.Scheme);
-            string notifyurl = Url.Action("Index", "Home", null, protocol: Request.Url.Scheme);
-
-            string amount = tongCong;
-            string orderid = maDonHang;
-            string requestId = maDonHang;
-            string extraData = "";
-
-            string rawHash = "partnerCode=" +
-                             partnerCode + "&accessKey=" +
-                             accessKey + "&requestId=" +
-                             requestId + "&amount=" +
-                             amount + "&orderId=" +
-                             orderid + "&orderInfo=" +
-                             orderInfo + "&returnUrl=" +
-                             returnUrl + "&notifyUrl=" +
-                             notifyurl + "&extraData=" +
-                             extraData;
-
-            log.Debug("rawHash = " + rawHash);
-            MoMoSecurity crypto = new MoMoSecurity();
-            //sign signature SHA256
-            string signature = crypto.signSHA256(rawHash, serectkey);
-            log.Debug("Signature = " + signature);
-
-            //build body json request
-            JObject message = new JObject
-            {
-                { "partnerCode", partnerCode },
-                { "accessKey", accessKey },
-                { "requestId", requestId },
-                { "amount", amount },
-                { "orderId", orderid },
-                { "orderInfo", orderInfo },
-                { "returnUrl", returnUrl },
-                { "notifyUrl", notifyurl },
-                { "extraData", extraData },
-                { "requestType", "captureMoMoWallet" },
-                { "signature", signature }
-
-            };
-            log.Debug("Json request to MoMo: " + message.ToString());
-            string responseFromMomo = PaymentRequest.sendPaymentRequest(endpoint, message.ToString());
-
-            JObject jmessage = JObject.Parse(responseFromMomo);
-            log.Debug("Return from MoMo: " + jmessage.ToString());
-            
-            return jmessage.GetValue("payUrl").ToString();
-            
-        }
         public ActionResult Success()
         {
             return View();
@@ -426,17 +389,18 @@ namespace WebBanSach.Controllers
                 .Include("KhachHang")
                 .Include("Voucher")
                 .Where(p => p.MaKH == UserController.khachhangstatic.MaKH);
-            
+
             // Lọc theo trạng thái nếu có
             if (status.HasValue)
             {
                 query = query.Where(x => x.TrangThaiDonHang == status.Value);
             }
-            
+
             var donDatHang = query.OrderByDescending(x => x.MaDDH).ToList();
             ViewBag.CurrentStatus = status;
             return View(donDatHang);
         }
+
         public ActionResult TrackingOderDetails(int id)
         {
             var order = db.DonDatHangs
@@ -444,12 +408,12 @@ namespace WebBanSach.Controllers
                 .Include("KhachHang")
                 .Include("Voucher")
                 .FirstOrDefault(x => x.MaDDH == id);
-            
+
             if (order == null)
             {
                 return RedirectToAction("TrackingOder");
             }
-            
+
             return View(order);
         }
 
@@ -460,7 +424,7 @@ namespace WebBanSach.Controllers
             try
             {
                 var order = db.DonDatHangs.Find(orderId);
-                
+
                 if (order == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
@@ -491,21 +455,55 @@ namespace WebBanSach.Controllers
             }
         }
 
+        // POST: /Cart/ConfirmReceived : khách xác nhận đã nhận hàng
+        [HttpPost]
+        public JsonResult ConfirmReceived(int orderId)
+        {
+            try
+            {
+                var order = db.DonDatHangs.Find(orderId);
+                if (order == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
+                }
+
+                // Kiểm tra quyền sở hữu
+                if (order.MaKH != UserController.khachhangstatic.MaKH)
+                {
+                    return Json(new { success = false, message = "Bạn không có quyền xác nhận đơn hàng này" });
+                }
+
+                // Chỉ cho phép xác nhận khi đơn đang giao
+                if (order.TrangThaiDonHang != 2)
+                {
+                    return Json(new { success = false, message = "Chỉ có thể xác nhận đơn hàng đang giao" });
+                }
+
+                // Dùng cùng logic với Admin để cập nhật trạng thái + trừ tồn kho
+                var process = new AdminProcess();
+                string msg;
+                bool ok = process.UpdateOrderStatusAndStock(orderId, 3, out msg); // 3 = Đã giao
+
+                if (!ok)
+                {
+                    return Json(new { success = false, message = msg });
+                }
+
+                return Json(new { success = true, message = "Cảm ơn bạn! Đơn hàng đã được xác nhận ĐÃ GIAO." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
         public JsonResult loadOrder()
         {
-            //if (id!=null)
-            //{
             db.Configuration.ProxyCreationEnabled = false;
             var donDatHang = db.DonDatHangs.ToList();
-            
-            return Json(new {data= donDatHang }
+
+            return Json(new { data = donDatHang }
                 , JsonRequestBehavior.AllowGet);
-            //}
-            //else
-            //{
-            //    List<DonDatHang> donDatHang = db.DonDatHangs.Where(p => p.MaKH == UserController.khachhangstatic.MaKH).ToList();
-            //    return Json(donDatHang, JsonRequestBehavior.AllowGet);
-            //}
         }
     }
 }

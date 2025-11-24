@@ -35,7 +35,6 @@ namespace WebBanSach.Models.Process
             {
                 if (result.MatKhau == password)
                 {
-                    
                     return 1;
                 }
                 else
@@ -52,8 +51,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm lấy mã admin
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>Admin</returns>
         public Admin GetIdAdmin(int id)
         {
             return db.Admins.Find(id);
@@ -62,8 +59,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm lấy mã sách
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>Sach</returns>
         public Sach GetIdBook(int id)
         {
             return db.Saches.Find(id);
@@ -72,8 +67,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm lấy mã thể loại
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>TheLoai</returns>
         public TheLoai GetIdCategory(int id)
         {
             return db.TheLoais.Find(id);
@@ -82,8 +75,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm lấy mã tác giả
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>TacGia</returns>
         public TacGia GetIdAuthor(int id)
         {
             return db.TacGias.Find(id);
@@ -92,8 +83,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm lấy mã nhà xuất bản
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>NhaXuatBan</returns>
         public NhaXuatBan GetIdPublish(int id)
         {
             return db.NhaXuatBans.Find(id);
@@ -102,8 +91,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// Hàm lấy mã khách hàng tham quan
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>KhachHang</returns>
         public KhachHang GetIdCustomer(int id)
         {
             return db.KhachHangs.Find(id);
@@ -112,8 +99,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm lấy mã đơn đặt hàng
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>DonDatHang</returns>
         public DonDatHang GetIdOrder(int id)
         {
             return db.DonDatHangs.Find(id);
@@ -122,8 +107,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm lấy mã liên hệ
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>LienHe</returns>
         public LienHe GetIdContact(int id)
         {
             return db.LienHes.Find(id);
@@ -138,7 +121,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xuất danh sách thể loại
         /// </summary>
-        /// <returns>List</returns>
         public List<TheLoai> ListAllCategory()
         {
             return db.TheLoais.OrderBy(x => x.MaLoai).ToList();
@@ -147,8 +129,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm thêm thểm loại
         /// </summary>
-        /// <param name="entity">TheLoai</param>
-        /// <returns>int</returns>
         public int InsertCategory(TheLoai entity)
         {
             db.TheLoais.Add(entity);
@@ -159,8 +139,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm cập nhật thể loại
         /// </summary>
-        /// <param name="entity">TheLoai</param>
-        /// <returns>int</returns>
         public int UpdateCategory(TheLoai entity)
         {
             try
@@ -179,8 +157,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xóa thể loại
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>bool</returns>
         public bool DeleteCategory(int id)
         {
             try
@@ -205,7 +181,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xuất danh sách tác giả
         /// </summary>
-        /// <returns>List</returns>
         public List<TacGia> ListAllAuthor()
         {
             return db.TacGias.OrderBy(x => x.MaTG).ToList();
@@ -214,8 +189,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm thêm tác giả
         /// </summary>
-        /// <param name="entity">TacGia</param>
-        /// <returns></returns>
         public int InsertAuthor(TacGia entity)
         {
             db.TacGias.Add(entity);
@@ -226,8 +199,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm cập nhật tác giả
         /// </summary>
-        /// <param name="entity">TacGia</param>
-        /// <returns>int</returns>
         public int UpdateAuthor(TacGia entity)
         {
             try
@@ -250,8 +221,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xóa tác giả
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>int</returns>
         public bool DeleteAuthor(int id)
         {
             try
@@ -277,7 +246,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xuất danh sách nhà xuất bản
         /// </summary>
-        /// <returns>List</returns>
         public List<NhaXuatBan> ListAllPublish()
         {
             return db.NhaXuatBans.OrderBy(x => x.MaNXB).ToList();
@@ -286,8 +254,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm thêm nhà xuất bản
         /// </summary>
-        /// <param name="entity">NhaXuatBan</param>
-        /// <returns>int</returns>
         public int InsertPublish(NhaXuatBan entity)
         {
             db.NhaXuatBans.Add(entity);
@@ -298,8 +264,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm cập nhật nhà xuất bản
         /// </summary>
-        /// <param name="entity">NhaXuatBan</param>
-        /// <returns>int</returns>
         public int UpdatePublish(NhaXuatBan entity)
         {
             try
@@ -320,8 +284,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xóa nhà xuất bản
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>bool</returns>
         public bool DeletePublish(int id)
         {
             try
@@ -347,7 +309,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xuất danh sách Sách
         /// </summary>
-        /// <returns>List</returns>
         public List<Sach> ListAllBook()
         {
             return db.Saches.OrderBy(x => x.MaSach).ToList();
@@ -356,8 +317,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm thêm sách
         /// </summary>
-        /// <param name="entity">Sach</param>
-        /// <returns>int</returns>
         public int InsertBook(Sach entity)
         {
             db.Saches.Add(entity);
@@ -368,8 +327,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm cập nhật sách
         /// </summary>
-        /// <param name="entity">Sách</param>
-        /// <returns>int</returns>
         public int UpdateBook(Sach entity)
         {
             try
@@ -397,8 +354,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xóa 1 cuốn sách
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>bool</returns>
         public bool DeleteBook(int id)
         {
             try
@@ -423,7 +378,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm lấy danh sách những phản hồi từ khách hàng
         /// </summary>
-        /// <returns>List</returns>
         public List<LienHe> ShowListContact()
         {
             return db.LienHes.OrderBy(x => x.MaLH).ToList();
@@ -432,8 +386,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xóa thông tin phản hồi khách hàng
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>bool</returns>
         public bool deleteContact(int id)
         {
             try
@@ -456,22 +408,19 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xuất danh sách người dùng
         /// </summary>
-        /// <returns>List</returns>
         public List<KhachHang> ListUser()
         {
             return db.KhachHangs.OrderBy(x => x.MaKH).ToList();
         }
+
         /// <summary>
         /// hàm thay đổi trạng thái người dùng (kích hoạt / khóa)
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>bool - true: đang kích hoạt, false: đã khóa / chưa kích hoạt</returns>
         public bool ChangeStatusUser(int id)
         {
             var kh = db.KhachHangs.SingleOrDefault(x => x.MaKH == id);
             if (kh == null) return false;
 
-            // TrangThai là bool => đảo true/false
             kh.TrangThai = !kh.TrangThai;
 
             db.SaveChanges();
@@ -482,8 +431,6 @@ namespace WebBanSach.Models.Process
         /// <summary>
         /// hàm xóa người dùng
         /// </summary>
-        /// <param name="id">int</param>
-        /// <returns>bool</returns>
         public bool DeleteUser(int id)
         {
             try
@@ -498,6 +445,159 @@ namespace WebBanSach.Models.Process
                 return false;
             }
         }
+
+        //ĐƠN ĐẶT HÀNG
+
+        #region đơn đặt hàng
+
+        /// <summary>
+        /// Cập nhật trạng thái đơn hàng, nếu chuyển sang ĐÃ GIAO (3) thì trừ tồn kho
+        /// </summary>
+        public bool UpdateOrderStatusAndStock(int orderId, int newStatus, out string message)
+        {
+            message = "";
+
+            var order = db.DonDatHangs.SingleOrDefault(x => x.MaDDH == orderId);
+            if (order == null)
+            {
+                message = "Không tìm thấy đơn hàng.";
+                return false;
+            }
+
+            int oldStatus = order.TrangThaiDonHang ?? 0;
+
+            // Chỉ trừ tồn khi chuyển từ trạng thái KHÁC sang ĐÃ GIAO (3)
+            if (newStatus == 3 && oldStatus != 3)
+            {
+                var chiTiet = db.ChiTietDDHs
+                                .Where(x => x.MaDDH == orderId)
+                                .ToList();
+
+                // 1. CHECK tồn kho trước
+                foreach (var ct in chiTiet)
+                {
+                    var sach = db.Saches.SingleOrDefault(s => s.MaSach == ct.MaSach);
+                    if (sach == null) continue;
+
+                    int soTon = sach.SoLuongTon ?? 0;
+                    int soLuongDat = ct.SoLuong ?? 0;
+
+                    if (soLuongDat > soTon)
+                    {
+                        message = "Sách '" + sach.TenSach + "' chỉ còn " + soTon + " bản, không đủ để giao " + soLuongDat + " bản.";
+                        return false;
+                    }
+                }
+
+                // 2. ĐỦ tồn → trừ tồn
+                foreach (var ct in chiTiet)
+                {
+                    var sach = db.Saches.SingleOrDefault(s => s.MaSach == ct.MaSach);
+                    if (sach == null) continue;
+
+                    int soTon = sach.SoLuongTon ?? 0;
+                    int soLuongDat = ct.SoLuong ?? 0;
+
+                    sach.SoLuongTon = soTon - soLuongDat;
+                }
+            }
+
+            // Cập nhật trạng thái đơn
+            order.TrangThaiDonHang = newStatus;
+            db.SaveChanges();
+
+            if (newStatus == 3 && oldStatus != 3)
+                message = "Cập nhật trạng thái ĐÃ GIAO và trừ tồn kho thành công.";
+            else
+                message = "Cập nhật trạng thái đơn hàng thành công.";
+
+            return true;
+        }
+
+        #endregion
+
+        //VOUCHER : mã giảm giá
+
+        #region voucher
+
+        /// <summary>
+        /// Lấy 1 voucher theo ID
+        /// </summary>
+        public Voucher GetIdVoucher(int id)
+        {
+            return db.Vouchers.Find(id);
+        }
+
+        /// <summary>
+        /// Danh sách tất cả voucher
+        /// </summary>
+        public List<Voucher> ListAllVoucher()
+        {
+            return db.Vouchers
+                     .OrderByDescending(x => x.NgayKetThuc)
+                     .ToList();
+        }
+
+        /// <summary>
+        /// Thêm voucher mới
+        /// </summary>
+        public int InsertVoucher(Voucher entity)
+        {
+            db.Vouchers.Add(entity);
+            db.SaveChanges();
+            return entity.MaVoucher;
+        }
+
+        /// <summary>
+        /// Cập nhật voucher
+        /// </summary>
+        public int UpdateVoucher(Voucher entity)
+        {
+            try
+            {
+                var vc = db.Vouchers.Find(entity.MaVoucher);
+                if (vc == null) return 0;
+
+                vc.MaCode = entity.MaCode;
+                vc.TenVoucher = entity.TenVoucher;
+                vc.LoaiGiamGia = entity.LoaiGiamGia;
+                vc.GiaTriGiam = entity.GiaTriGiam;
+                vc.GiaTriDonHangToiThieu = entity.GiaTriDonHangToiThieu;
+                vc.SoLuong = entity.SoLuong;
+                vc.NgayBatDau = entity.NgayBatDau;
+                vc.NgayKetThuc = entity.NgayKetThuc;
+                vc.TrangThai = entity.TrangThai;
+
+                db.SaveChanges();
+                return 1;
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Xóa voucher
+        /// </summary>
+        public bool DeleteVoucher(int id)
+        {
+            try
+            {
+                var vc = db.Vouchers.Find(id);
+                if (vc == null) return false;
+
+                db.Vouchers.Remove(vc);
+                db.SaveChanges();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        #endregion
 
     }
 }

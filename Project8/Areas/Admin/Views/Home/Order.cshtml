@@ -1,7 +1,9 @@
 ﻿@model IEnumerable<WebBanSach.Models.Data.DonDatHang>
 
-@{ ViewBag.Title = "Order";
-                Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml"; }
+@{
+    ViewBag.Title = "Order";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
 
 <h2>Quản lý đơn hàng</h2>
 
@@ -62,78 +64,99 @@
 else
 {
     <table class="table" id="myTable">
-    <thead>
-        <tr>
-            <th>Mã ĐH</th>
-            <th>Khách hàng</th>
-            <th>Ngày đặt</th>
-            <th>Ngày giao</th>
-            <th>Tổng tiền</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var item in Model)
-        {
-            var statusClass = "";
-            var statusText = "";
-            switch (item.TrangThaiDonHang ?? 0)
-            {
-                case 0: statusClass = "label-warning"; statusText = "Chờ xác nhận"; break;
-                case 1: statusClass = "label-info"; statusText = "Đã xác nhận"; break;
-                case 2: statusClass = "label-primary"; statusText = "Đang giao"; break;
-                case 3: statusClass = "label-success"; statusText = "Đã giao"; break;
-                case 4: statusClass = "label-danger"; statusText = "Đã hủy"; break;
-            }
-
-            decimal tongTien = item.ChiTietDDHs.Sum(x => (x.SoLuong ?? 0) * (x.DonGia ?? 0));
-            decimal tongTienSauGiam = tongTien - (item.GiamGia ?? 0);
-            
-            <tr id="row_@item.MaDDH">
-                <td>
-                    <strong>#@item.MaDDH</strong>
-                </td>
-                <td>
-                    @(item.KhachHang != null ? item.KhachHang.TenKH : "N/A")
-                </td>
-                <td>
-                    @item.NgayDat.ToString("dd/MM/yyyy")
-                </td>
-                <td>
-                    @item.NgayGiao.ToString("dd/MM/yyyy")
-                </td>
-                <td>
-                    @if (item.GiamGia > 0)
-                    {
-                        <div>
-                            <small style="text-decoration: line-through; color: #999;">@tongTien.ToString("N0") đ</small><br/>
-                            <strong style="color: #d9534f;">@tongTienSauGiam.ToString("N0") đ</strong>
-                        </div>
-                    }
-                    else
-                    {
-                        <strong>@tongTien.ToString("N0") đ</strong>
-                    }
-                </td>
-                <td>
-                    <span class="label @statusClass" id="status_@item.MaDDH">@statusText</span>
-                </td>
-                <td>
-                    <select class="form-control input-sm" id="status_dropdown_@item.MaDDH" onchange="updateOrderStatus(@item.MaDDH, this.value)" style="width: 150px; display: inline-block;">
-                        <option value="0" @(item.TrangThaiDonHang == 0 ? "selected" : "")>Chờ xác nhận</option>
-                        <option value="1" @(item.TrangThaiDonHang == 1 ? "selected" : "")>Đã xác nhận</option>
-                        <option value="2" @(item.TrangThaiDonHang == 2 ? "selected" : "")>Đang giao</option>
-                        <option value="3" @(item.TrangThaiDonHang == 3 ? "selected" : "")>Đã giao</option>
-                        <option value="4" @(item.TrangThaiDonHang == 4 ? "selected" : "")>Đã hủy</option>
-                    </select>
-                    @Html.ActionLink("Chi tiết", "DetailsOrder", new { id = item.MaDDH }, new { @class = "btn btn-info btn-sm", style = "margin-left: 5px;" })
-                </td>
+        <thead>
+            <tr>
+                <th>Mã ĐH</th>
+                <th>Khách hàng</th>
+                <th>Ngày đặt</th>
+                <th>Ngày giao</th>
+                <th>Tổng tiền</th>
+                <th>Voucher</th>      @* THÊM CỘT NÀY *@
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var statusClass = "";
+                var statusText = "";
+                switch (item.TrangThaiDonHang ?? 0)
+                {
+                    case 0: statusClass = "label-warning"; statusText = "Chờ xác nhận"; break;
+                    case 1: statusClass = "label-info"; statusText = "Đã xác nhận"; break;
+                    case 2: statusClass = "label-primary"; statusText = "Đang giao"; break;
+                    case 3: statusClass = "label-success"; statusText = "Đã giao"; break;
+                    case 4: statusClass = "label-danger"; statusText = "Đã hủy"; break;
+                }
+
+                decimal tongTien = item.ChiTietDDHs.Sum(x => (x.SoLuong ?? 0) * (x.DonGia ?? 0));
+                decimal giamGia = item.GiamGia.HasValue ? item.GiamGia.Value : 0;
+                decimal tongTienSauGiam = tongTien - giamGia;
+
+                <tr id="row_@item.MaDDH">
+                    <td>
+                        <strong>#@item.MaDDH</strong>
+                    </td>
+                    <td>
+                        @(item.KhachHang != null ? item.KhachHang.TenKH : "N/A")
+                    </td>
+                    <td>
+                        @item.NgayDat.ToString("dd/MM/yyyy")
+                    </td>
+                    <td>
+                        @item.NgayGiao.ToString("dd/MM/yyyy")
+                    </td>
+                    <td>
+                        @if (giamGia > 0)
+                        {
+                            <div>
+                                <small style="text-decoration: line-through; color: #999;">
+                                    @tongTien.ToString("N0") đ
+                                </small><br />
+                                <strong style="color: #d9534f;">
+                                    @tongTienSauGiam.ToString("N0") đ
+                                </strong><br />
+                                <small style="color:#d9534f;">Giảm: @giamGia.ToString("N0") đ</small>
+                            </div>
+                        }
+                        else
+                        {
+                            <strong>@tongTien.ToString("N0") đ</strong>
+                        }
+                    </td>
+                    <td>
+                        @if (item.MaVoucher.HasValue && item.Voucher != null)
+                        {
+                            <span class="label label-success">@item.Voucher.TenVoucher</span><br />
+                            <small>Mã: @item.Voucher.MaCode</small>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Không dùng</span>
+                        }
+                    </td>
+                    <td>
+                        <span class="label @statusClass" id="status_@item.MaDDH">@statusText</span>
+                    </td>
+                    <td>
+                        <select class="form-control input-sm" id="status_dropdown_@item.MaDDH"
+                                onchange="updateOrderStatus(@item.MaDDH, this.value)"
+                                style="width: 150px; display: inline-block;">
+                            <option value="0" @(item.TrangThaiDonHang == 0 ? "selected" : "")>Chờ xác nhận</option>
+                            <option value="1" @(item.TrangThaiDonHang == 1 ? "selected" : "")>Đã xác nhận</option>
+                            <option value="2" @(item.TrangThaiDonHang == 2 ? "selected" : "")>Đang giao</option>
+                            <option value="3" @(item.TrangThaiDonHang == 3 ? "selected" : "")>Đã giao</option>
+                            <option value="4" @(item.TrangThaiDonHang == 4 ? "selected" : "")>Đã hủy</option>
+                        </select>
+                        @Html.ActionLink("Chi tiết", "DetailsOrder", new { id = item.MaDDH },
+                            new { @class = "btn btn-info btn-sm", style = "margin-left: 5px;" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
 
 <script>
@@ -159,8 +182,7 @@ else
             success: function (response) {
                 if (response.success) {
                     alert(response.message);
-                    
-                    // Cập nhật label hiển thị
+
                     var statusClass = '';
                     var statusText = '';
                     switch (parseInt(newStatus)) {
@@ -170,7 +192,7 @@ else
                         case 3: statusClass = 'label-success'; statusText = 'Đã giao'; break;
                         case 4: statusClass = 'label-danger'; statusText = 'Đã hủy'; break;
                     }
-                    
+
                     $('#status_' + orderId)
                         .removeClass('label-warning label-info label-primary label-success label-danger')
                         .addClass(statusClass)

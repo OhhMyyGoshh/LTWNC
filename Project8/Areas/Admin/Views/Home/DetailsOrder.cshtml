@@ -1,47 +1,179 @@
 ﻿@model IEnumerable<WebBanSach.Models.Data.ChiTietDDH>
 
 @{
-    ViewBag.Title = "DetailsOrder";
+    ViewBag.Title = "Chi tiết đơn hàng";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+
+    var first = (Model != null) ? Model.FirstOrDefault() : null;
+    int maDDH = (first != null) ? first.MaDDH : 0;
+    var order = (first != null) ? first.DonDatHang : null;
+    var kh = (order != null) ? order.KhachHang : null;
+
+    decimal tongTien = (Model != null)
+        ? Model.Sum(x => (x.SoLuong ?? 0) * (x.DonGia ?? 0))
+        : 0;
 }
 
-<h2>Chi tiết đơn hàng</h2>
+<style>
+    .product-img {
+        max-width: 70px;
+        max-height: 100px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    }
 
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.DonDatHang.MaDDH)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Sach.TenSach)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.SoLuong)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.DonGia)
-        </th>
-    </tr>
+    tfoot tr td {
+        border-top: 2px solid #ddd !important;
+    }
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.DonDatHang.MaDDH)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Sach.TenSach)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.SoLuong)
-        </td>
-        <td>
-            <p>@String.Format("{0:0,0}", item.DonGia) VND</p>
-        </td>
-    </tr>
-}
+    .order-info-card {
+        margin-bottom: 15px;
+    }
 
-</table>
+    .table-borderless > tbody > tr > th,
+    .table-borderless > tbody > tr > td {
+        border-top: none !important;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
 
-<div>
-    @Html.ActionLink("Trở về", "Order")
+    .note-cell {
+        background: #fffdf2;
+        border-radius: 4px;
+        padding: 6px 10px;
+        border: 1px solid #f5e4b5;
+    }
+</style>
+
+<div class="page-header" style="margin-top:0;">
+    <h2 style="margin-top:0;">
+        Chi tiết đơn hàng
+        @if (maDDH > 0)
+        {
+            <small>#@maDDH</small>
+        }
+    </h2>
 </div>
+
+@if (order != null && kh != null)
+{
+    <div class="panel panel-default order-info-card">
+        <div class="panel-heading" style="font-weight:600;">
+            Thông tin người nhận
+        </div>
+        <div class="panel-body">
+            <table class="table table-borderless" style="margin-bottom:0;">
+                <tbody>
+                    <tr>
+                        <th style="width:150px;">Họ tên:</th>
+                        <td>@kh.TenKH</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>@kh.Email</td>
+                    </tr>
+                    <tr>
+                        <th>Điện thoại:</th>
+                        <td>@kh.DienThoai</td>
+                    </tr>
+                    <tr>
+                        <th>Địa chỉ:</th>
+                        <td>@kh.DiaChi</td>
+                    </tr>
+                    <tr>
+                        <th>Ngày đặt:</th>
+                        <td>@String.Format("{0:dd/MM/yyyy HH:mm}", order.NgayDat)</td>
+                    </tr>
+
+                    @* Gộp ghi chú vào chung card thông tin người nhận *@
+                    @if (!string.IsNullOrWhiteSpace(order.GhiChu))
+                    {
+                        <tr>
+                            <th>Ghi chú:</th>
+                            <td class="note-cell" style="white-space: pre-wrap;">
+                                @order.GhiChu
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="panel panel-default">
+    <div class="panel-heading" style="font-weight:600;">
+        Sản phẩm trong đơn
+        <span class="badge" style="margin-left:10px;">
+            @(Model != null ? Model.Count() : 0) sản phẩm
+        </span>
+        <span class="pull-right">
+            Tổng tiền: <strong style="color:#d9534f;">@tongTien.ToString("N0") đ</strong>
+        </span>
+        <div class="clearfix"></div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th style="width:90px;">Mã đơn</th>
+                    <th style="width:100px;">Ảnh sách</th>
+                    <th>Tên sách</th>
+                    <th style="width:90px;" class="text-center">Số lượng</th>
+                    <th style="width:130px;" class="text-right">Đơn giá</th>
+                    <th style="width:130px;" class="text-right">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model == null || !Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            Đơn hàng không có sản phẩm nào.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        var soLuong = item.SoLuong ?? 0;
+                        var donGia = item.DonGia ?? 0;
+                        var thanhTien = soLuong * donGia;
+
+                        <tr>
+                            <td>@item.MaDDH</td>
+                            <td class="text-center">
+                                @if (item.Sach != null && !string.IsNullOrEmpty(item.Sach.AnhBia))
+                                {
+                                    <img src="~/images/@item.Sach.AnhBia"
+                                         alt="@item.Sach.TenSach"
+                                         class="product-img" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có ảnh</span>
+                                }
+                            </td>
+                            <td>@(item.Sach != null ? item.Sach.TenSach : "")</td>
+                            <td class="text-center">@soLuong</td>
+                            <td class="text-right">@donGia.ToString("N0") đ</td>
+                            <td class="text-right">@thanhTien.ToString("N0") đ</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" class="text-right"><strong>Tổng tiền:</strong></td>
+                    <td class="text-right"><strong>@tongTien.ToString("N0") đ</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<p>
+    @Html.ActionLink("← Trở về danh sách đơn hàng", "Order", null, new { @class = "btn btn-default" })
+</p>
