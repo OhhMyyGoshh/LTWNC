@@ -8,11 +8,13 @@ using WebBanSach.Models.Process;
 using PagedList;
 using PagedList.Mvc;
 
+
 namespace WebBanSach.Controllers
 {
     public class BookController : Controller
     {
         BSDBContext db = new BSDBContext();
+
         // GET: Book
         public ActionResult Index()
         {
@@ -27,14 +29,34 @@ namespace WebBanSach.Controllers
             return PartialView(result);
         }
 
-        //GET : /Book/Details/:id : hiển thị chi tiết thông tin sách
+        //GET : /Book/Details/:id : hiển thị chi tiết thông tin sách + rating
         public ActionResult Details(int? id)
         {
             if (id == null)
                 return HttpNotFound();
+
             var result = new AdminProcess().GetIdBook(id.Value);
             if (result == null)
                 return HttpNotFound();
+
+            // Lấy thông tin rating cho sách này
+            var ratings = db.DanhGiaSaches.Where(r => r.MaSach == id.Value);
+
+            double avgRating = 0;
+            int ratingCount = 0;
+
+            if (ratings.Any())
+            {
+                ratingCount = ratings.Count();
+                avgRating = ratings.Average(r => r.SoSao);
+            }
+
+            ViewBag.AvgRating = avgRating;
+            ViewBag.RatingCount = ratingCount;
+
+            // Nếu có thông báo từ khi submit rating
+            ViewBag.RatingMessage = TempData["RatingMessage"];
+
             return View(result);
         }
 
@@ -70,7 +92,6 @@ namespace WebBanSach.Controllers
             return PartialView("RelatedBooks", related);
         }
 
-
         //GET : /Book/DidYouSee : hiển thị ra 3 cuốn sách giảm dần theo ngày
         //Parital View : DidYouSee
         public ActionResult DidYouSee()
@@ -80,15 +101,14 @@ namespace WebBanSach.Controllers
             return PartialView(result);
         }
 
-        //GET : /Book/All : hiển thị tất cả sách trong db
         //GET : /Book/All : hiển thị tất cả sách trong db + lọc & sắp xếp
         public ActionResult ShowAllBook(
-    int? page,
-    int? categoryId,
-    int? publisherId,
-    int? authorId,
-    string priceRange,
-    string sortOrder)
+            int? page,
+            int? categoryId,
+            int? publisherId,
+            int? authorId,
+            string priceRange,
+            string sortOrder)
         {
             int pageSize = 12;
             int pageNumber = page ?? 1;
@@ -154,10 +174,9 @@ namespace WebBanSach.Controllers
             }
 
             // Dropdown lấy từ DB (TheLoai, NXB, TacGia)
-            ViewBag.CategoryList  = new SelectList(db.TheLoais.OrderBy(t => t.TenLoai), "MaLoai", "TenLoai");
-ViewBag.PublisherList = new SelectList(db.NhaXuatBans.OrderBy(n => n.TenNXB), "MaNXB", "TenNXB");
-ViewBag.AuthorList    = new SelectList(db.TacGias.OrderBy(a => a.TenTG), "MaTG", "TenTG");
-
+            ViewBag.CategoryList = new SelectList(db.TheLoais.OrderBy(t => t.TenLoai), "MaLoai", "TenLoai");
+            ViewBag.PublisherList = new SelectList(db.NhaXuatBans.OrderBy(n => n.TenNXB), "MaNXB", "TenNXB");
+            ViewBag.AuthorList = new SelectList(db.TacGias.OrderBy(a => a.TenTG), "MaTG", "TenTG");
 
             // Giữ lại giá trị filter
             ViewBag.CategoryId = categoryId;
@@ -171,8 +190,48 @@ ViewBag.AuthorList    = new SelectList(db.TacGias.OrderBy(a => a.TenTG), "MaTG",
             return View(result);
         }
 
+        // POST: /Book/SubmitRating : khách gửi đánh giá
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SubmitRating(int MaSach, int Rating, string Comment)
+        {
+            // Nếu chưa login thì đẩy về trang chi tiết + báo lỗi
+            if (UserController.khachhangstatic == null)
+            {
+                TempData["RatingMessage"] = "Bạn cần đăng nhập để đánh giá sản phẩm.";
+                return RedirectToAction("Details", new { id = MaSach });
+            }
 
+            int maKH = UserController.khachhangstatic.MaKH;
 
+            // Kiểm tra đã từng đánh giá sách này chưa
+            var existing = db.DanhGiaSaches
+                             .FirstOrDefault(x => x.MaSach == MaSach && x.MaKH == maKH);
 
+            if (existing == null)
+            {
+                var rating = new DanhGiaSach
+                {
+                    MaSach = MaSach,
+                    MaKH = maKH,
+                    SoSao = Rating,
+                    NoiDung = Comment,
+                    NgayDanhGia = DateTime.Now
+                };
+                db.DanhGiaSaches.Add(rating);
+            }
+            else
+            {
+                // Cập nhật lại đánh giá cũ
+                existing.SoSao = Rating;
+                existing.NoiDung = Comment;
+                existing.NgayDanhGia = DateTime.Now;
+            }
+
+            db.SaveChanges();
+
+            TempData["RatingMessage"] = "Đánh giá của bạn đã được ghi nhận. Cảm ơn bạn!";
+            return RedirectToAction("Details", new { id = MaSach });
+        }
     }
 }

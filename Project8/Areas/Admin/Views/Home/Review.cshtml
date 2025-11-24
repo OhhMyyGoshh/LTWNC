@@ -1,0 +1,162 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.DanhGiaSach>
+
+@{
+    ViewBag.Title = "Quản lý đánh giá sách";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Quản lý đánh giá sách</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info" style="margin-top:20px;">
+        <i class="fa fa-info-circle"></i> Hiện chưa có đánh giá nào từ khách hàng.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-hover" id="reviewTable">
+        <thead>
+            <tr>
+                <th>Mã</th>
+                <th>Sách</th>
+                <th>Khách hàng</th>
+                <th>Số sao</th>
+                <th>Nội dung</th>
+                <th>Ngày đánh giá</th>
+                <th>Trạng thái duyệt</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@(item.Sach != null ? item.Sach.TenSach : "N/A")</td>
+                    <td>
+                        @(item.KhachHang != null ? item.KhachHang.TenKH : "N/A")<br />
+                        <small style="color:#777;">
+                            @(item.KhachHang != null ? item.KhachHang.Email : "")
+                        </small>
+                    </td>
+                    <td>
+                        <span class="text-warning">
+                            @{
+                                for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= item.SoSao)
+                                    {
+                                        @:<i class="fa fa-star"></i>
+                                    }
+                                    else
+                                    {
+                                        @:<i class="fa fa-star-o"></i>
+                                    }
+                                }
+                            }
+                        </span>
+                        <br /><small>@item.SoSao / 5</small>
+                    </td>
+                    <td style="max-width:250px;">
+                        @{
+                            if (!string.IsNullOrEmpty(item.NoiDung))
+                            {
+                                var shortText = item.NoiDung.Length > 80 ? item.NoiDung.Substring(0, 80) + "..." : item.NoiDung;
+                                <span>@shortText</span>;
+                                if (item.NoiDung.Length > 80)
+                                {
+                                    <br />
+                                    <a href="javascript:void(0);" onclick="showFullReview(@item.Id)" style="font-size:11px;">Xem đầy đủ</a>
+                                }
+                            }
+                            else
+                            {
+                                <em>Không có nội dung</em>
+                            }
+                        }
+                    </td>
+                    <td>@item.NgayDanhGia.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @{
+                            if (item.TrangThaiDuyet)
+                            {
+                                <span class="label label-success">Đã duyệt</span>;
+                            }
+                            else
+                            {
+                                <span class="label label-default">Chưa duyệt</span>;
+                            }
+                        }
+                    </td>
+                    <td>
+                        <button type="button"
+                                class="btn btn-xs @(item.TrangThaiDuyet ? "btn-warning" : "btn-success")"
+                                onclick="toggleReview(@item.Id)">
+                            <i class="fa @(item.TrangThaiDuyet ? "fa-eye-slash" : "fa-eye")"></i>
+                            @(item.TrangThaiDuyet ? "Ẩn" : "Duyệt")
+                        </button>
+                        <button type="button"
+                                class="btn btn-xs btn-danger"
+                                onclick="deleteReview(@item.Id)">
+                            <i class="fa fa-trash"></i> Xóa
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<!-- Modal xem full nội dung -->
+<div class="modal fade" id="reviewModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                <h4 class="modal-title">Nội dung đánh giá</h4>
+            </div>
+            <div class="modal-body">
+                <pre id="fullReviewContent" style="white-space:pre-wrap; font-family:inherit;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(function () {
+            $('#reviewTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json" },
+                order: [[0, "desc"]]
+            });
+        });
+
+        function showFullReview(id) {
+            var row = $('#reviewTable tbody tr').filter(function () {
+                return $(this).find('td:first').text().trim() == id.toString();
+            });
+            var shortText = row.find('td').eq(4).text().trim();
+            $('#fullReviewContent').text(shortText);
+            $('#reviewModal').modal('show');
+        }
+
+        function toggleReview(id) {
+            if (!confirm('Thay đổi trạng thái duyệt đánh giá #' + id + '?')) return;
+            $.post('/Admin/Home/ToggleReviewStatus', { id: id }, function (res) {
+                if (res && res.success) { alert(res.message); location.reload(); }
+                else { alert('Lỗi: ' + (res.message || 'Không xác định')); }
+            });
+        }
+
+        function deleteReview(id) {
+            if (!confirm('Xóa đánh giá #' + id + ' ?')) return;
+            $.ajax({
+                url: '/Admin/Home/DeleteReview/' + id,
+                type: 'DELETE',
+                success: function () { alert('Đã xóa đánh giá'); location.reload(); },
+                error: function () { alert('Lỗi khi xóa đánh giá!'); }
+            });
+        }
+    </script>
+}

@@ -742,6 +742,64 @@ namespace WebBanSach.Areas.Admin.Controllers
 
         #endregion
 
-    }
+        #region Đánh giá (Rating & Review)
 
+        // GET: /Admin/Home/Review
+        [HttpGet]
+        public ActionResult Review(bool? daDuyet)
+        {
+            var reviews = db.DanhGiaSaches
+                .Include("Sach")
+                .Include("KhachHang")
+                .AsQueryable();
+
+            if (daDuyet.HasValue)
+            {
+                reviews = reviews.Where(r => r.TrangThaiDuyet == daDuyet.Value);
+            }
+
+            var list = reviews
+                .OrderByDescending(r => r.NgayDanhGia)
+                .ToList();
+
+            ViewBag.DaDuyet = daDuyet;
+            ViewBag.TotalReviews = list.Count();
+
+            return View(list);
+        }
+
+        // POST: /Admin/Home/ToggleReviewStatus/:id
+        [HttpPost]
+        public JsonResult ToggleReviewStatus(int id)
+        {
+            var review = db.DanhGiaSaches.Find(id);
+            if (review == null)
+                return Json(new { success = false, message = "Không tìm thấy đánh giá" });
+
+            review.TrangThaiDuyet = !review.TrangThaiDuyet;
+            db.Entry(review).State = System.Data.Entity.EntityState.Modified;
+            db.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                message = review.TrangThaiDuyet ? "Đã duyệt đánh giá" : "Đã ẩn đánh giá"
+            });
+        }
+
+        // DELETE: /Admin/Home/DeleteReview/:id
+        [HttpDelete]
+        public ActionResult DeleteReview(int id)
+        {
+            var review = db.DanhGiaSaches.Find(id);
+            if (review != null)
+            {
+                db.DanhGiaSaches.Remove(review);
+                db.SaveChanges();
+            }
+            return RedirectToAction("Review");
+        }
+
+        #endregion
+    }
 }

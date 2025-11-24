@@ -23,6 +23,10 @@ namespace WebBanSach.Models.Data
         public virtual DbSet<TheLoai> TheLoais { get; set; }
         public virtual DbSet<Voucher> Vouchers { get; set; }
         public virtual DbSet<VoucherSuDung> VoucherSuDungs { get; set; }
+        public virtual DbSet<DanhGiaSach> DanhGiaSaches { get; set; }
+
+
+
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

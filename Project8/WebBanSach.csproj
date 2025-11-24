@@ -206,6 +206,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="Models\Data\DanhGiaSach.cs" />
     <Compile Include="Startup.Auth.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -1129,6 +1130,7 @@
     <Content Include="Areas\Admin\Views\Home\Voucher.cshtml" />
     <Content Include="Areas\Admin\Views\Home\AddVoucher.cshtml" />
     <Content Include="Areas\Admin\Views\Home\UpdateVoucher.cshtml" />
+    <Content Include="Areas\Admin\Views\Home\Review.cshtml" />
     <None Include="Properties\PublishProfiles\123.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
