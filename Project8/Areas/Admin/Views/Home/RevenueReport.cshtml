@@ -1,0 +1,102 @@
+﻿@{
+    ViewBag.Title = "Báo cáo doanh thu theo tháng";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+
+    int defaultYear = ViewBag.DefaultYear != null ? (int)ViewBag.DefaultYear : DateTime.Now.Year;
+}
+
+<h2 style="margin-top:0;">Báo cáo doanh thu theo tháng</h2>
+<hr />
+
+<div class="row" style="margin-bottom:15px;">
+    <div class="col-md-3">
+        <label>Chọn năm</label>
+        <select id="yearSelect" class="form-control">
+            @{
+                // Cho phép chọn từ (năm hiện tại - 5) đến (năm hiện tại + 1)
+                for (int y = defaultYear - 5; y <= defaultYear + 1; y++)
+                {
+                    <option value="@y" @(y == defaultYear ? "selected" : "")>@y</option>
+                }
+            }
+        </select>
+    </div>
+</div>
+
+<div id="revenueChart" style="width:100%; height:450px;"></div>
+
+@section scripts{
+    <!-- Highcharts CDN -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+    <script>
+        $(function () {
+            var $yearSelect = $('#yearSelect');
+
+            function loadRevenue(year) {
+                $.getJSON('@Url.Action("GetMonthlyRevenue", "Home", new { area = "Admin" })',
+                    { year: year },
+                    function (res) {
+                        if (!res || !res.success) {
+                            alert('Không tải được dữ liệu doanh thu.');
+                            return;
+                        }
+
+                        var seriesData = res.data || [];
+
+                        Highcharts.chart('revenueChart', {
+                            chart: {
+                                type: 'column'
+                            },
+                            title: {
+                                text: 'Doanh thu sách theo tháng năm ' + year
+                            },
+                            xAxis: {
+                                categories: ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'],
+                                crosshair: true
+                            },
+                            yAxis: {
+                                min: 0,
+                                title: {
+                                    text: 'Doanh thu (VND)'
+                                },
+                                labels: {
+                                    formatter: function () {
+                                        // format 1,234,567
+                                        return Highcharts.numberFormat(this.value, 0, ',', '.');
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                headerFormat: '<span style="font-size: 11px">Tháng {point.key}</span><br/>',
+                                pointFormat:
+                                    '<span style="color:{series.color}">\u25CF</span> ' +
+                                    '{series.name}: <b>{point.y:,.0f} đ</b><br/>',
+                                shared: true,
+                                useHTML: true
+                            },
+                            plotOptions: {
+                                column: {
+                                    pointPadding: 0.2,
+                                    borderWidth: 0
+                                }
+                            },
+                            series: [{
+                                name: 'Doanh thu',
+                                data: seriesData
+                            }]
+                        });
+                    });
+            }
+
+            // Load lần đầu
+            loadRevenue($yearSelect.val());
+
+            // Đổi năm -> load lại
+            $yearSelect.on('change', function () {
+                var year = $(this).val();
+                loadRevenue(year);
+            });
+        });
+    </script>
+}

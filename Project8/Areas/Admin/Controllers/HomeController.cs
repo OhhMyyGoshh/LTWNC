@@ -24,6 +24,61 @@ namespace WebBanSach.Areas.Admin.Controllers
         {
             return View();
         }
+        #region Bao cao doanh thu
+        // Báo cáo doanh thu theo tháng trong năm
+        [HttpGet]
+        
+        public ActionResult RevenueReport()
+        {
+            // Năm mặc định là năm hiện tại
+            ViewBag.DefaultYear = DateTime.Now.Year;
+            return View();
+        }
+
+        // API trả JSON cho Highcharts
+        [HttpGet]
+        public JsonResult GetMonthlyRevenue(int year)
+        {
+            // Chỉ tính những đơn đã giao thành công (TrangThaiDonHang = 3)
+            var orders = db.DonDatHangs
+                           .Include("ChiTietDDHs")
+                           .Where(o => o.NgayDat.Year == year && o.TrangThaiDonHang == 3)
+                           .ToList();
+
+            // Group theo tháng và tính doanh thu: tổng (đơn giá * số lượng) - giảm giá
+            var monthly = orders
+                .GroupBy(o => o.NgayDat.Month)
+                .Select(g => new
+                {
+                    Month = g.Key,
+                    Revenue = g.Sum(o =>
+                        o.ChiTietDDHs.Sum(d =>
+                            d.DonGia.GetValueOrDefault(0) * d.SoLuong.GetValueOrDefault(0)
+                        )
+                        - o.GiamGia.GetValueOrDefault(0)
+                    )
+                })
+                .ToList();
+
+            // Mảng 12 tháng cho Highcharts
+            var data = new double[12];
+            foreach (var m in monthly)
+            {
+                int index = m.Month - 1; // 1-12 -> 0-11
+                if (index >= 0 && index < 12)
+                {
+                    data[index] = (double)m.Revenue;
+                }
+            }
+
+            return Json(new
+            {
+                success = true,
+                year = year,
+                data = data
+            }, JsonRequestBehavior.AllowGet);
+        } 
+        #endregion
 
         #region Sản phẩm
 
