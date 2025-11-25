@@ -1,0 +1,196 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.VongQuayVoucher>
+
+@{
+    ViewBag.Title = "Cấu hình vòng quay voucher";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Cấu hình vòng quay voucher</h2>
+
+<div class="row" style="margin-bottom:20px;">
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Thêm ô mới
+            </div>
+            <div class="panel-body">
+                @using (Html.BeginForm("AddWheelSegment", "Home", FormMethod.Post, new { area = "Admin", @class = "form-horizontal" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Voucher</label>
+                        <div class="col-md-9">
+                            @Html.DropDownList("MaVoucher",
+                                (SelectList)ViewBag.VoucherList,
+                                "-- Ô trúng rỗng / không voucher --",
+                                new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Tên ô</label>
+                        <div class="col-md-9">
+                            <input type="text" name="TenO" class="form-control"
+                                   placeholder="Nếu bỏ trống sẽ auto theo tên voucher / 'Trượt'">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Tỉ lệ trúng</label>
+                        <div class="col-md-9">
+                            <input type="number" name="TiLeTrung" value="1" min="1" class="form-control" style="width:120px;">
+                            <span class="help-block">Số càng lớn tỉ lệ trúng càng cao.</span>
+                        </div>
+                    </div>
+
+                    @* ---- Ô chọn màu có color picker ---- *@
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Màu</label>
+                        <div class="col-md-9">
+                            <div class="input-group" style="max-width:260px;">
+                                <span class="input-group-addon" style="padding:0 6px;">
+                                    <input type="color"
+                                           id="ColorPicker"
+                                           value="#f1c40f"
+                                           style="border:none; padding:0; width:32px; height:24px; background:transparent;" />
+                                </span>
+                                <input type="text"
+                                       id="MauHex"
+                                       name="MauHex"
+                                       value="#f1c40f"
+                                       class="form-control"
+                                       placeholder="#f1c40f" />
+                            </div>
+                            <span class="help-block">Chọn màu hoặc nhập mã hex, ví dụ: #e74c3c</span>
+                        </div>
+                    </div>
+                    @* -------------------------------------- *@
+
+                    <div class="form-group">
+                        <div class="col-md-offset-3 col-md-9">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-plus"></i> Thêm ô
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        Chưa có ô nào trên vòng quay.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Tên ô</th>
+                <th>Voucher</th>
+                <th>Tỉ lệ</th>
+                <th>Màu</th>
+                <th>Hoạt động</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var o in Model)
+            {
+                var color = string.IsNullOrEmpty(o.MauHex) ? "#f1c40f" : o.MauHex;
+                <tr>
+                    <td>@o.Id</td>
+                    <td>@o.TenO</td>
+                    <td>
+                        @if (o.Voucher != null)
+                        {
+                            @o.Voucher.TenVoucher
+                            @: (Mã: @o.Voucher.MaCode)
+                        }
+                        else
+                        {
+                            <em>Không voucher</em>
+                        }
+                    </td>
+                    <td>@o.TiLeTrung</td>
+                    <td>
+                        <span style="display:inline-block;width:16px;height:16px;border-radius:50%;border:1px solid #ccc;background:@color;"></span>
+                        @color
+                    </td>
+                    <td>
+                        @if (o.HoatDong)
+                        {
+                            <span class="label label-success">Bật</span>
+                        }
+                        else
+                        {
+                            <span class="label label-default">Tắt</span>
+                        }
+                    </td>
+                    <td>
+                        <button type="button"
+                                class="btn btn-xs @(o.HoatDong ? "btn-warning" : "btn-success")"
+                                onclick="toggleSegment(@o.Id)">
+                            <i class="fa @(o.HoatDong ? "fa-power-off" : "fa-play")"></i>
+                            @(o.HoatDong ? "Tắt" : "Bật")
+                        </button>
+
+                        @using (Html.BeginForm(
+                         "DeleteWheelSegment",          // action
+                         "Home",                        // controller
+                             new { area = "Admin", id = o.Id }, // route values  <<< CHỖ NÀY
+                             FormMethod.Post,               // method
+                            new { style = "display:inline-block;" } // html attributes (tuỳ chọn)
+       ))
+                        {
+                            @Html.HttpMethodOverride("DELETE")
+                            <button type="submit"
+                                    class="btn btn-xs btn-danger"
+                                    onclick="return confirm('Xóa ô này khỏi vòng quay?');">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        }
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section scripts{
+    <script>
+        // Đồng bộ color picker <=> ô text hex
+        $(function () {
+            $('#ColorPicker').on('input change', function () {
+                $('#MauHex').val($(this).val());
+            });
+
+            $('#MauHex').on('input', function () {
+                var val = $(this).val();
+                // nếu nhập đúng dạng #RRGGBB thì update lại picker
+                if (/^#([0-9A-Fa-f]{6})$/.test(val)) {
+                    $('#ColorPicker').val(val);
+                }
+            });
+        });
+
+        function toggleSegment(id) {
+            if (!confirm('Thay đổi trạng thái ô #' + id + ' ?')) return;
+
+            $.post('@Url.Action("ToggleWheelSegment", "Home", new { area = "Admin" })',
+                { id: id },
+                function (res) {
+                    if (res && res.success) {
+                        alert(res.message);
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + (res.message || 'Không xác định'));
+                    }
+                });
+        }
+    </script>
+}

@@ -10,6 +10,7 @@ namespace WebBanSach.Models.Process
         BSDBContext db = new BSDBContext();
 
         // Kiểm tra và áp dụng voucher
+        // maKH: dùng để ưu tiên kiểm tra voucher trong kho VoucherSuDung của user
         public VoucherResult ApplyVoucher(string maCode, decimal tongTien, int? maKH = null)
         {
             var result = new VoucherResult();
@@ -17,8 +18,8 @@ namespace WebBanSach.Models.Process
             try
             {
                 // Tìm voucher theo mã code
-                var voucher = db.Vouchers.FirstOrDefault(v => 
-                    v.MaCode.ToLower() == maCode.ToLower() && 
+                var voucher = db.Vouchers.FirstOrDefault(v =>
+                    v.MaCode.ToLower() == maCode.ToLower() &&
                     v.TrangThai == true);
 
                 if (voucher == null)
@@ -37,12 +38,29 @@ namespace WebBanSach.Models.Process
                     return result;
                 }
 
-                // Kiểm tra số lượng
+                // Kiểm tra số lượng tổng
                 if (voucher.SoLuong <= 0)
                 {
                     result.Success = false;
                     result.Message = "Mã voucher đã hết số lượng!";
                     return result;
+                }
+
+                // Nếu có MaKH: bắt buộc user phải có voucher trong kho VoucherSuDung (chưa dùng, chưa gắn đơn)
+                if (maKH.HasValue)
+                {
+                    var owned = db.VoucherSuDungs.FirstOrDefault(x =>
+                        x.MaVoucher == voucher.MaVoucher &&
+                        x.MaKH == maKH.Value &&
+                        x.MaDDH == null &&
+                        x.NgaySuDung == null);
+
+                    if (owned == null)
+                    {
+                        result.Success = false;
+                        result.Message = "Voucher này không có trong tài khoản của bạn hoặc đã được sử dụng.";
+                        return result;
+                    }
                 }
 
                 // Kiểm tra giá trị đơn hàng tối thiểu
@@ -86,31 +104,42 @@ namespace WebBanSach.Models.Process
             }
         }
 
-        // Giảm số lượng voucher khi sử dụng
+        // Dùng voucher: ưu tiên đánh dấu bản ghi trong kho VoucherSuDung
         public bool UseVoucher(int maVoucher, int maKH, int maDDH)
         {
             try
             {
+                // Tìm record trong kho của user (chưa gắn đơn, chưa dùng)
+                var vu = db.VoucherSuDungs.FirstOrDefault(x =>
+                    x.MaVoucher == maVoucher &&
+                    x.MaKH == maKH &&
+                    x.MaDDH == null &&
+                    x.NgaySuDung == null);
+
+                // Nếu chưa có (case dùng mã public) thì vẫn log vào kho
+                if (vu == null)
+                {
+                    vu = new VoucherSuDung
+                    {
+                        MaVoucher = maVoucher,
+                        MaKH = maKH
+                    };
+                    db.VoucherSuDungs.Add(vu);
+                }
+
+                // Đánh dấu đã dùng cho đơn này
+                vu.MaDDH = maDDH;
+                vu.NgaySuDung = DateTime.Now;
+
+                // Giảm số lượng voucher tổng
                 var voucher = db.Vouchers.Find(maVoucher);
                 if (voucher != null && voucher.SoLuong > 0)
                 {
-                    // Giảm số lượng
                     voucher.SoLuong--;
-
-                    // Lưu lịch sử sử dụng
-                    var history = new VoucherSuDung
-                    {
-                        MaVoucher = maVoucher,
-                        MaKH = maKH,
-                        MaDDH = maDDH,
-                        NgaySuDung = DateTime.Now
-                    };
-                    db.VoucherSuDungs.Add(history);
-
-                    db.SaveChanges();
-                    return true;
                 }
-                return false;
+
+                db.SaveChanges();
+                return true;
             }
             catch
             {
@@ -123,9 +152,9 @@ namespace WebBanSach.Models.Process
         {
             var now = DateTime.Now;
             return db.Vouchers
-                .Where(v => v.TrangThai == true && 
-                           v.NgayBatDau <= now && 
-                           v.NgayKetThuc >= now && 
+                .Where(v => v.TrangThai == true &&
+                           v.NgayBatDau <= now &&
+                           v.NgayKetThuc >= now &&
                            v.SoLuong > 0)
                 .OrderBy(v => v.GiaTriDonHangToiThieu)
                 .ToList();

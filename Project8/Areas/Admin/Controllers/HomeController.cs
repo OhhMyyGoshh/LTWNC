@@ -801,5 +801,99 @@ namespace WebBanSach.Areas.Admin.Controllers
         }
 
         #endregion
+        #region Vòng quay voucher
+
+        [HttpGet]
+        public ActionResult LuckyWheelConfig()
+        {
+            var segments = db.VongQuayVouchers
+                             .Include("Voucher")
+                             .OrderBy(x => x.Id)
+                             .ToList();
+
+            ViewBag.VoucherList = new SelectList(
+                db.Vouchers.OrderBy(v => v.TenVoucher),
+                "MaVoucher",
+                "TenVoucher"
+            );
+
+            return View(segments);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddWheelSegment(int? MaVoucher, string TenO, int TiLeTrung = 1, string MauHex = "#f1c40f")
+        {
+            if (string.IsNullOrWhiteSpace(TenO) && MaVoucher.HasValue)
+            {
+                var vc = db.Vouchers.Find(MaVoucher.Value);
+                if (vc != null)
+                {
+                    TenO = "Voucher " + vc.TenVoucher;
+                }
+            }
+
+            var seg = new VongQuayVoucher
+            {
+                MaVoucher = MaVoucher,
+                TenO = string.IsNullOrWhiteSpace(TenO) ? "Trượt" : TenO,
+                TiLeTrung = TiLeTrung <= 0 ? 1 : TiLeTrung,
+                MauHex = string.IsNullOrWhiteSpace(MauHex) ? "#f1c40f" : MauHex,
+                HoatDong = true
+            };
+
+            db.VongQuayVouchers.Add(seg);
+            db.SaveChanges();
+
+            return RedirectToAction("LuckyWheelConfig");
+        }
+
+        [HttpPost]
+        public JsonResult ToggleWheelSegment(int id)
+        {
+            var seg = db.VongQuayVouchers.Find(id);
+            if (seg == null)
+                return Json(new { success = false, message = "Không tìm thấy ô" });
+
+            seg.HoatDong = !seg.HoatDong;
+            db.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                active = seg.HoatDong,
+                message = seg.HoatDong ? "Đã bật ô quay" : "Đã tắt ô quay"
+            });
+        }
+
+        [HttpDelete]
+        public ActionResult DeleteWheelSegment(int id)
+        {
+            var seg = db.VongQuayVouchers.Find(id);
+            if (seg == null)
+            {
+                return HttpNotFound();
+            }
+
+            // Xóa hết log lượt quay liên quan ô này
+            var logs = db.LuotQuayVouchers
+                         .Where(l => l.VongQuayVoucherId == seg.Id)
+                         .ToList();
+
+            if (logs.Any())
+            {
+                db.LuotQuayVouchers.RemoveRange(logs);
+            }
+
+            // Sau đó xóa ô vòng quay
+            db.VongQuayVouchers.Remove(seg);
+            db.SaveChanges();
+
+            return RedirectToAction("LuckyWheelConfig");
+        }
+
+
+        #endregion
+
     }
 }

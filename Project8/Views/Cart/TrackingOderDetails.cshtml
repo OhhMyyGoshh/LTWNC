@@ -2,18 +2,43 @@
 @{
     ViewBag.Title = "Chi tiết đơn hàng #" + Model.MaDDH;
     Layout = "~/Views/Shared/_Layout.cshtml";
-    
+
     var trangThai = Model.TrangThaiDonHang ?? 0;
     var statusText = "";
     var statusColor = "";
-    
-    switch(trangThai)
+
+    switch (trangThai)
     {
         case 0: statusText = "Chờ xác nhận"; statusColor = "warning"; break;
         case 1: statusText = "Đã xác nhận"; statusColor = "info"; break;
         case 2: statusText = "Đang giao hàng"; statusColor = "primary"; break;
         case 3: statusText = "Đã giao"; statusColor = "success"; break;
         case 4: statusText = "Đã hủy"; statusColor = "danger"; break;
+    }
+
+    // LẤY THÔNG TIN NGƯỜI NHẬN, ƯU TIÊN FIELD TRONG ĐƠN
+    var kh = Model.KhachHang;
+    var tenNhan = !string.IsNullOrWhiteSpace(Model.TenNguoiNhan)
+                    ? Model.TenNguoiNhan
+                    : (kh != null ? kh.TenKH : "");
+    var emailNhan = !string.IsNullOrWhiteSpace(Model.EmailNguoiNhan)
+                    ? Model.EmailNguoiNhan
+                    : (kh != null ? kh.Email : "");
+    var dienThoaiNhan = !string.IsNullOrWhiteSpace(Model.DienThoaiNhan)
+                    ? Model.DienThoaiNhan
+                    : (kh != null ? kh.DienThoai : "");
+    var diaChiNhan = !string.IsNullOrWhiteSpace(Model.DiaChiNhan)
+                    ? Model.DiaChiNhan
+                    : (kh != null ? kh.DiaChi : "");
+
+    // Text phương thức thanh toán (1=COD, 2=MoMo, 3=khác...)
+    string paymentText;
+    switch (Model.ThanhToan)
+    {
+        case 1: paymentText = "Tiền mặt khi nhận hàng (COD)"; break;
+        case 2: paymentText = "Thanh toán qua ví MoMo"; break;
+        case 3: paymentText = "Thẻ / ví điện tử"; break;
+        default: paymentText = "Khác"; break;
     }
 }
 
@@ -24,22 +49,25 @@
         margin: 30px 0;
         position: relative;
     }
-    .order-timeline::before {
-        content: '';
-        position: absolute;
-        top: 20px;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: #e0e0e0;
-        z-index: 0;
-    }
+
+        .order-timeline::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
     .timeline-item {
         text-align: center;
         position: relative;
         z-index: 1;
         flex: 1;
     }
+
     .timeline-icon {
         width: 40px;
         height: 40px;
@@ -52,10 +80,12 @@
         margin: 0 auto 10px;
         font-size: 18px;
     }
+
     .timeline-item.active .timeline-icon {
         background: #5cb85c;
         color: white;
     }
+
     .timeline-item.current .timeline-icon {
         background: #5bc0de;
         color: white;
@@ -68,8 +98,8 @@
         <i class="fa fa-shopping-bag"></i> Chi tiết đơn hàng #@Model.MaDDH
         <span class="label label-@statusColor pull-right">@statusText</span>
     </h2>
-    <hr/>
-    
+    <hr />
+
     <!-- Timeline trạng thái -->
     <div class="order-timeline">
         <div class="timeline-item @(trangThai >= 0 && trangThai != 4 ? "active" : "") @(trangThai == 0 ? "current" : "")">
@@ -90,7 +120,7 @@
         </div>
     </div>
 
-    @if(trangThai == 4)
+    @if (trangThai == 4)
     {
         <div class="alert alert-danger text-center">
             <i class="fa fa-times-circle fa-3x"></i>
@@ -109,16 +139,15 @@
                     <table class="table table-borderless" style="margin-bottom: 0;">
                         <tr>
                             <td style="width: 40%; font-weight: bold;"><i class="fa fa-user-circle"></i> Họ tên:</td>
-                            <td>@Model.KhachHang.TenKH</td>
+                            <td>@Model.TenNguoiNhan</td>
                         </tr>
                         <tr>
                             <td style="font-weight: bold;"><i class="fa fa-phone"></i> Điện thoại:</td>
                             <td>
                                 @{
-                                    var phone = Model.KhachHang.DienThoai;
-                                    // Che 3 số giữa để bảo mật: 090***5678
-                                    var maskedPhone = phone.Length >= 7 
-                                        ? phone.Substring(0, 3) + "***" + phone.Substring(phone.Length - 4) 
+                                    var phone = Model.DienThoaiNhan ?? "";
+                                    var maskedPhone = phone.Length >= 7
+                                        ? phone.Substring(0, 3) + "***" + phone.Substring(phone.Length - 4)
                                         : phone;
                                 }
                                 @maskedPhone
@@ -126,13 +155,13 @@
                         </tr>
                         <tr>
                             <td style="font-weight: bold;"><i class="fa fa-envelope"></i> Email:</td>
-                            <td>@Model.KhachHang.Email</td>
+                            <td>@Model.EmailNguoiNhan</td>
                         </tr>
                     </table>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-6">
             <div class="panel panel-success">
                 <div class="panel-heading">
@@ -140,19 +169,30 @@
                 </div>
                 <div class="panel-body">
                     <p style="font-size: 15px; line-height: 1.8;">
-                        <i class="fa fa-home" style="color: #5cb85c;"></i> 
-                        <strong>@Model.KhachHang.DiaChi</strong>
+                        <i class="fa fa-home" style="color: #5cb85c;"></i>
+                        <strong>@Model.DiaChiNhan</strong>
+
                     </p>
-                    <hr style="margin: 15px 0;"/>
+                    <hr style="margin: 15px 0;" />
                     <p style="margin: 0;">
                         <i class="fa fa-calendar"></i> <strong>Ngày đặt:</strong> @Model.NgayDat.ToString("dd/MM/yyyy HH:mm")
                     </p>
                     <p style="margin: 5px 0 0 0;">
-                        <i class="fa fa-truck"></i> <strong>Dự kiến giao:</strong> 
+                        <i class="fa fa-truck"></i> <strong>Dự kiến giao:</strong>
                         <span style="color: #5bc0de;">@Model.NgayGiao.ToString("dd/MM/yyyy")</span>
                     </p>
                     <p style="margin: 5px 0 0 0;">
-                        <i class="fa fa-credit-card"></i> <strong>Thanh toán:</strong> 
+                        <i class="fa fa-credit-card"></i> <strong>Thanh toán:</strong> @{
+                            string thanhToanText;
+                            switch (Model.ThanhToan)
+                            {
+                                case 1: thanhToanText = "Tiền mặt khi nhận hàng (COD)"; break;
+                                case 2: thanhToanText = "Thanh toán bằng ví MoMo"; break;
+                                case 3: thanhToanText = "Thẻ / ví điện tử"; break;
+                                default: thanhToanText = "Không xác định"; break;
+                            }
+                        }
+                        @thanhToanText
                         @(Model.ThanhToan == 1 ? "Tiền mặt khi nhận hàng (COD)" : "Chuyển khoản")
                     </p>
                 </div>
@@ -186,13 +226,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var item in Model.ChiTietDDHs)
+                    @foreach (var item in Model.ChiTietDDHs)
                     {
                         <tr>
                             <td>
                                 <div style="display: flex; align-items: center;">
-                                    <img src="/images/@item.Sach.AnhBia" 
-                                         alt="@item.Sach.TenSach" 
+                                    <img src="/images/@item.Sach.AnhBia"
+                                         alt="@item.Sach.TenSach"
                                          style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;"
                                          onerror="this.src='/images/no-image.jpg';" />
                                     <strong>@item.Sach.TenSach</strong>
@@ -220,22 +260,22 @@
                         var tamTinh = Model.ChiTietDDHs.Sum(x => x.DonGia.GetValueOrDefault() * x.SoLuong.GetValueOrDefault());
                         var tongTien = tamTinh - Model.GiamGia.GetValueOrDefault();
                     }
-                    
+
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px;">
                         <span>Tạm tính:</span>
                         <span><strong>@tamTinh.ToString("N0") đ</strong></span>
                     </div>
-                    
-                    @if(Model.GiamGia > 0)
+
+                    @if (Model.GiamGia > 0)
                     {
                         <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px; color: #5cb85c;">
                             <span><i class="fa fa-ticket"></i> Giảm giá:</span>
                             <span><strong>- @Model.GiamGia.GetValueOrDefault().ToString("N0") đ</strong></span>
                         </div>
                     }
-                    
-                    <hr style="margin: 15px 0; border-top: 2px solid #ddd;"/>
-                    
+
+                    <hr style="margin: 15px 0; border-top: 2px solid #ddd;" />
+
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
                         <span style="font-size: 20px; font-weight: bold;">Tổng cộng:</span>
                         <span style="font-size: 24px; font-weight: bold; color: #d9534f;">

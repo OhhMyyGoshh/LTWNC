@@ -205,8 +205,13 @@
     <Compile Include="Controllers\CartController.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\LuckyWheelController.cs" />
     <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="Controllers\VoucherController.cs" />
     <Compile Include="Models\Data\DanhGiaSach.cs" />
+    <Compile Include="Models\Data\LuotQuayVoucher.cs" />
+    <Compile Include="Models\Data\SachYeuThich.cs" />
+    <Compile Include="Models\Data\VongQuayVoucher.cs" />
     <Compile Include="Startup.Auth.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -716,6 +721,7 @@
     <Content Include="images\harrypotter.jpg" />
     <Content Include="images\icon_fb_2x.jpg" />
     <Content Include="images\icon_g_2x.jpg" />
+    <Content Include="images\IMG_4288.JPG" />
     <Content Include="images\logo.jpg" />
     <Content Include="images\luyen-thi-toeic.jpg" />
     <Content Include="images\me-before-you.jpg" />
@@ -1131,6 +1137,7 @@
     <Content Include="Areas\Admin\Views\Home\AddVoucher.cshtml" />
     <Content Include="Areas\Admin\Views\Home\UpdateVoucher.cshtml" />
     <Content Include="Areas\Admin\Views\Home\Review.cshtml" />
+    <Content Include="Areas\Admin\Views\Home\LuckyWheelConfig.cshtml" />
     <None Include="Properties\PublishProfiles\123.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
@@ -1197,6 +1204,10 @@
     <Content Include="Views\User\LoginOTP.cshtml" />
     <Content Include="Views\User\Login2FA.cshtml" />
     <Content Include="Views\Book\RelatedBooks.cshtml" />
+    <Content Include="Views\Book\MyFavoriteBooks.cshtml" />
+    <Content Include="Views\LuckyWheel\Index.cshtml" />
+    <Content Include="Views\Voucher\MyVouchers.cshtml" />
+    <Content Include="Views\Cart\MomoPayment.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

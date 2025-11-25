@@ -4,12 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using WebBanSach.Models.Data;
-using WebBanSach.Models.Process;
-using WebBanSach.Models;
 using System.Web.Script.Serialization;
+using System.Data.Entity;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using WebBanSach.Models;
+using WebBanSach.Models.Data;
+using WebBanSach.Models.Process;
+
 using Project8.Models.Data;
 using Project8.Models.Process;
 
@@ -30,17 +33,17 @@ namespace WebBanSach.Controllers
             var list = new List<CartModel>();
             var sl = 0;
             decimal? total = 0;
+
             if (cart != null)
             {
                 list = (List<CartModel>)cart;
                 sl = list.Sum(x => x.Quantity);
                 total = list.Sum(x => x.Total);
             }
+
             ViewBag.Quantity = sl;
             ViewBag.Total = total;
-
-            // Thông báo lỗi (hết hàng / vượt tồn kho) nếu có
-            ViewBag.CartError = TempData["CartError"];
+            ViewBag.CartError = TempData["CartError"];   // thông báo lỗi nếu có
 
             return View(list);
         }
@@ -177,26 +180,27 @@ namespace WebBanSach.Controllers
             });
         }
 
-        //Thông tin khách hàng
+        //Thông tin khách hàng trên trang Payment
         [HttpGet]
         [ChildActionOnly]
         public PartialViewResult UserInfo()
         {
-            //lấy dữ liệu từ session
             var model = Session["User"];
+            if (model == null)
+            {
+                return PartialView();
+            }
 
             if (ModelState.IsValid)
             {
-                //tìm tên tài khoản
                 var result = db.KhachHangs.SingleOrDefault(x => x.TaiKhoan == model);
-
-                //trả về dữ liệu tương ứng
                 return PartialView(result);
             }
 
             return PartialView();
         }
 
+        //GET: /Cart/Payment : trang thanh toán
         [HttpGet]
         public ActionResult Payment()
         {
@@ -210,32 +214,34 @@ namespace WebBanSach.Controllers
             {
                 return RedirectToAction("ThongBaoKichHoat", "User");
             }
-            else
+
+            var cart = Session[CartSession];
+            var list = new List<CartModel>();
+            var sl = 0;
+            decimal? total = 0;
+
+            if (cart != null)
             {
-                var cart = Session[CartSession];
-                var list = new List<CartModel>();
-                var sl = 0;
-                decimal? total = 0;
-                if (cart != null)
-                {
-                    list = (List<CartModel>)cart;
-                    sl = list.Sum(x => x.Quantity);
-                    total = list.Sum(x => x.Total);
-                }
-                ViewBag.Quantity = sl;
-                ViewBag.Total = total;
-
-                ViewBag.CartError = TempData["CartError"];
-
-                return View(list);
+                list = (List<CartModel>)cart;
+                sl = list.Sum(x => x.Quantity);
+                total = list.Sum(x => x.Total);
             }
+
+            ViewBag.Quantity = sl;
+            ViewBag.Total = total;
+            ViewBag.CartError = TempData["CartError"];
+
+            return View(list);
         }
 
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog log =
+            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        //POST: /Cart/Payment : tạo đơn đặt hàng
         [HttpPost]
         public ActionResult Payment(int MaKH, FormCollection f)
         {
+            // Phương thức thanh toán: 1 = COD, 2 = MoMo (hoặc thêm sau)
             int PMethod = 1;
             int tmp;
             if (int.TryParse(f["PaymentMethod"], out tmp))
@@ -243,6 +249,7 @@ namespace WebBanSach.Controllers
                 PMethod = tmp;
             }
 
+            // Mã voucher đã áp dụng (nếu có)
             int maVoucher = 0;
             int.TryParse(f["MaVoucher"], out maVoucher);
 
@@ -279,21 +286,47 @@ namespace WebBanSach.Controllers
             }
             // ===================================================================
 
-            var order = new DonDatHang();
-            order.NgayDat = DateTime.Now;
-            order.NgayGiao = DateTime.Now.AddDays(3);
-            order.TinhTrang = true; //đã nhận hàng (trạng thái thanh toán)
-            order.MaKH = MaKH;
-            order.GhiChu = f["GhiChu"];
-            order.ThanhToan = PMethod;   // 1: COD (hoặc các phương thức khác nếu sau này mở rộng)
-            order.TrangThaiDonHang = 0;  // Chờ xác nhận
-            order.MaVoucher = null;
-            order.GiamGia = 0;
+            // ==== LẤY THÔNG TIN NGƯỜI NHẬN TỪ FORM ====
+            string tenNguoiNhan = f["TenKH"];
+            string emailNguoiNhan = f["Email"];
+            string diaChiNguoiNhan = f["DiaChi"];
+            string dienThoaiNguoiNhan = f["DienThoai"];
+           
+
+            var kh = db.KhachHangs.Find(MaKH);
+            if (kh != null)
+            {
+                if (string.IsNullOrWhiteSpace(tenNguoiNhan)) tenNguoiNhan = kh.TenKH;
+                if (string.IsNullOrWhiteSpace(emailNguoiNhan)) emailNguoiNhan = kh.Email;
+                if (string.IsNullOrWhiteSpace(diaChiNguoiNhan)) diaChiNguoiNhan = kh.DiaChi;
+                if (string.IsNullOrWhiteSpace(dienThoaiNguoiNhan)) dienThoaiNguoiNhan = kh.DienThoai;
+            }
+            var order = new DonDatHang
+            {
+                NgayDat = DateTime.Now,
+                NgayGiao = DateTime.Now.AddDays(3),
+                TinhTrang = true,        // tuỳ anh định nghĩa
+                MaKH = MaKH,
+                GhiChu = f["GhiChu"],
+                ThanhToan = PMethod,     // 1: COD, 2: MoMo
+                TrangThaiDonHang = 0,           // Chờ xác nhận
+                MaVoucher = null,
+                GiamGia = 0,
+
+                // *** LẤY THÔNG TIN NGƯỜI NHẬN TỪ FORM ***
+                TenNguoiNhan = f["TenKH"],      // name="TenKH" trên view
+                EmailNguoiNhan = f["Email"],     // name="Email"
+                DiaChiNhan = f["DiaChi"],     // name="DiaChi"
+                DienThoaiNhan = f["DienThoai"]   // name="DienThoai"
+            };
+
 
             try
             {
-                var cartCOD = cart;
-                decimal? total = cartCOD.Sum(x => x.Total);
+                // Tổng tiền trước giảm
+                decimal? totalNullable = cart.Sum(x => x.Total);
+                if (totalNullable == null) totalNullable = 0m;
+                decimal total = totalNullable.Value;
 
                 // Áp dụng voucher nếu có
                 if (maVoucher > 0)
@@ -306,14 +339,17 @@ namespace WebBanSach.Controllers
                             var voucherProcess = new VoucherProcess();
                             var voucherResult = voucherProcess.ApplyVoucher(
                                 voucher.MaCode,
-                                total.GetValueOrDefault(0),
+                                total,
                                 MaKH
                             );
 
                             if (voucherResult.Success)
                             {
                                 order.MaVoucher = maVoucher;
+                                // ép kiểu rõ ràng để tránh lỗi decimal?/decimal
                                 order.GiamGia = (decimal)voucherResult.GiamGia;
+                                // nếu cần có thể dùng voucherResult.TongTienSauGiam để hiển thị
+                                total = voucherResult.TongTienSauGiam;
                             }
                         }
                     }
@@ -328,19 +364,20 @@ namespace WebBanSach.Controllers
 
                 // Lưu chi tiết đơn hàng
                 var result2 = new OderDetailProcess();
-                foreach (var item in cartCOD)
+                foreach (var item in cart)
                 {
-                    var orderDetail = new ChiTietDDH();
-                    orderDetail.MaSach = item.sach.MaSach;
-                    orderDetail.MaDDH = result1;
-                    orderDetail.SoLuong = item.Quantity;
-                    orderDetail.DonGia = item.sach.GiaBan;
+                    var orderDetail = new ChiTietDDH
+                    {
+                        MaSach = item.sach.MaSach,
+                        MaDDH = result1,
+                        SoLuong = item.Quantity,
+                        DonGia = item.sach.GiaBan
+                    };
                     result2.Insert(orderDetail);
                 }
 
                 // KHÔNG TRỪ TỒN KHO Ở ĐÂY
                 // Tồn kho chỉ trừ khi ADMIN hoặc KHÁCH HÀNG xác nhận ĐÃ GIAO (status = 3)
-                // trong Admin/Home/UpdateOrderStatus hoặc Cart/ConfirmReceived
 
                 // Đánh dấu voucher đã sử dụng
                 if (maVoucher > 0 && order.MaVoucher != null)
@@ -355,8 +392,19 @@ namespace WebBanSach.Controllers
                     }
                 }
 
+                // Xoá giỏ hàng sau khi đặt xong
                 Session[CartSession] = null;
-                return Redirect("/Cart/Success");
+
+                // === ĐIỀU HƯỚNG THEO PHƯƠNG THỨC THANH TOÁN ===
+                if (PMethod == 2) // MoMo
+                {
+                    long amount = (long)Math.Round(total, 0, MidpointRounding.AwayFromZero);
+                    return RedirectToAction("MoMoPayment", new { orderId = result1, amount = amount });
+                }
+
+                // COD hoặc các phương thức khác => vào trang Success như cũ
+                return RedirectToAction("Success");
+
             }
             catch (Exception ex)
             {
@@ -370,7 +418,18 @@ namespace WebBanSach.Controllers
                 ViewBag.ErrorMessage = ex.Message;
                 return Redirect("/Cart/Error");
             }
+
         }
+        [HttpGet]
+        public ActionResult MomoPayment(int orderId, long amount)
+        {
+            ViewBag.OrderId = orderId;
+            ViewBag.Amount = amount;
+            ViewBag.TransferContent = "BOOK-" + orderId; // nội dung chuyển tiền
+
+            return View();
+        }
+
 
         public ActionResult Success()
         {

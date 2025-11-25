@@ -7,6 +7,7 @@ using WebBanSach.Models.Data;
 using WebBanSach.Models.Process;
 using PagedList;
 using PagedList.Mvc;
+using System.Data.Entity;
 
 
 namespace WebBanSach.Controllers
@@ -29,7 +30,7 @@ namespace WebBanSach.Controllers
             return PartialView(result);
         }
 
-        //GET : /Book/Details/:id : hiển thị chi tiết thông tin sách + rating
+        //GET : /Book/Details/:id : hiển thị chi tiết thông tin sách + rating + favorite + bình luận
         public ActionResult Details(int? id)
         {
             if (id == null)
@@ -39,26 +40,52 @@ namespace WebBanSach.Controllers
             if (result == null)
                 return HttpNotFound();
 
-            // Lấy thông tin rating cho sách này
-            var ratings = db.DanhGiaSaches.Where(r => r.MaSach == id.Value);
+            // ===== LẤY THÔNG TIN RATING + BÌNH LUẬN ĐÃ DUYỆT =====
+            var ratingsQuery = db.DanhGiaSaches
+                                 .Include(d => d.KhachHang)
+                                 .Where(d => d.MaSach == id.Value && d.TrangThaiDuyet);
+
+            var ratingsList = ratingsQuery.ToList();
 
             double avgRating = 0;
             int ratingCount = 0;
 
-            if (ratings.Any())
+            if (ratingsList.Any())
             {
-                ratingCount = ratings.Count();
-                avgRating = ratings.Average(r => r.SoSao);
+                ratingCount = ratingsList.Count;
+                avgRating = ratingsList.Average(r => r.SoSao);
             }
 
             ViewBag.AvgRating = avgRating;
             ViewBag.RatingCount = ratingCount;
-
-            // Nếu có thông báo từ khi submit rating
             ViewBag.RatingMessage = TempData["RatingMessage"];
+            ViewBag.Reviews = ratingsList;   // list bình luận đã duyệt
+
+            // ===== KIỂM TRA YÊU THÍCH + ĐÁNH GIÁ CỦA USER HIỆN TẠI =====
+            bool isFavorite = false;
+            DanhGiaSach myReview = null;
+            bool isLoggedIn = UserController.khachhangstatic != null;
+
+            if (isLoggedIn)
+            {
+                int maKH = UserController.khachhangstatic.MaKH;
+
+                isFavorite = db.SachYeuThiches
+                               .Any(x => x.MaSach == id.Value && x.MaKH == maKH);
+
+                myReview = db.DanhGiaSaches
+                             .FirstOrDefault(d => d.MaSach == id.Value && d.MaKH == maKH);
+            }
+
+            ViewBag.IsFavorite = isFavorite;
+            ViewBag.FavoriteMessage = TempData["FavoriteMessage"];
+            ViewBag.MyReview = myReview;
+            ViewBag.IsLoggedIn = isLoggedIn;
 
             return View(result);
         }
+
+
 
         //GET : /Book/Favorite : hiển thị ra 3 cuốn sách bán chạy theo ngày cập nhật (silde trên cùng)
         //Parital View : FavoriteBook
@@ -216,7 +243,8 @@ namespace WebBanSach.Controllers
                     MaKH = maKH,
                     SoSao = Rating,
                     NoiDung = Comment,
-                    NgayDanhGia = DateTime.Now
+                    NgayDanhGia = DateTime.Now,
+                    TrangThaiDuyet = false // admin duyệt sau
                 };
                 db.DanhGiaSaches.Add(rating);
             }
@@ -226,12 +254,80 @@ namespace WebBanSach.Controllers
                 existing.SoSao = Rating;
                 existing.NoiDung = Comment;
                 existing.NgayDanhGia = DateTime.Now;
+                existing.TrangThaiDuyet = false; // sửa xong lại chờ duyệt
             }
 
             db.SaveChanges();
 
-            TempData["RatingMessage"] = "Đánh giá của bạn đã được ghi nhận. Cảm ơn bạn!";
+            TempData["RatingMessage"] = "Đánh giá của bạn đã được ghi nhận, chờ admin duyệt. Cảm ơn bạn!";
             return RedirectToAction("Details", new { id = MaSach });
+        }
+
+        // POST: /Book/ToggleFavorite : thêm / bỏ sách yêu thích
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ToggleFavorite(int MaSach)
+        {
+            if (UserController.khachhangstatic == null)
+            {
+                TempData["FavoriteMessage"] = "Bạn cần đăng nhập để sử dụng chức năng yêu thích.";
+                return RedirectToAction("Details", new { id = MaSach });
+            }
+
+            int maKH = UserController.khachhangstatic.MaKH;
+
+            var fav = db.SachYeuThiches
+                        .FirstOrDefault(x => x.MaSach == MaSach && x.MaKH == maKH);
+
+            if (fav == null)
+            {
+                // Thêm mới yêu thích
+                var newFav = new SachYeuThich
+                {
+                    MaSach = MaSach,
+                    MaKH = maKH,
+                    NgayThem = DateTime.Now
+                };
+                db.SachYeuThiches.Add(newFav);
+                TempData["FavoriteMessage"] = "Đã thêm vào danh sách yêu thích.";
+            }
+            else
+            {
+                // Bỏ yêu thích
+                db.SachYeuThiches.Remove(fav);
+                TempData["FavoriteMessage"] = "Đã bỏ khỏi danh sách yêu thích.";
+            }
+
+            db.SaveChanges();
+            if (Request.UrlReferrer != null)
+                return Redirect(Request.UrlReferrer.ToString());
+
+            return RedirectToAction("Details", new { id = MaSach });
+        }
+
+        // GET: /Book/MyFavoriteBooks : danh sách sách yêu thích của khách
+        public ActionResult MyFavoriteBooks(int? page)
+        {
+            if (UserController.khachhangstatic == null)
+            {
+                return RedirectToAction("LoginPage", "User");
+            }
+
+            int maKH = UserController.khachhangstatic.MaKH;
+            int pageSize = 12;
+            int pageNumber = page ?? 1;
+
+            var query = from f in db.SachYeuThiches
+                        join s in db.Saches on f.MaSach equals s.MaSach
+                        where f.MaKH == maKH
+                        orderby f.NgayThem descending
+                        select s;
+
+            var result = query.ToPagedList(pageNumber, pageSize);
+
+            ViewBag.TotalFavorite = result.TotalItemCount;
+
+            return View(result);
         }
     }
 }

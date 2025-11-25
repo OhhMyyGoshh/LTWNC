@@ -1,4 +1,5 @@
 ﻿@model WebBanSach.Models.Data.KhachHang
+
 <style>
     .checkout-button {
         display: flex;
@@ -7,85 +8,157 @@
         padding: 5px;
         border-radius: 5px
     }
-    .checkout-button img {
-        padding-left: 10px;
-        height: 50px;
-        width: 50px;
-    }
-    .content{
+
+        .checkout-button img {
+            padding-left: 10px;
+            height: 50px;
+            width: 50px;
+        }
+
+    .content {
         padding-left: 15px;
     }
-    .content .checkout-title{
-        color: #000;
-        font-size: 13pt;
-        font-weight: 600;
-    }
-    .content .description{
-        color: #666
-    }
-    input[type="radio"]:hover{
+
+        .content .checkout-title {
+            color: #000;
+            font-size: 13pt;
+            font-weight: 600;
+        }
+
+        .content .description {
+            color: #666
+        }
+
+    input[type="radio"]:hover {
         cursor: pointer;
     }
+
+    .map-container {
+        margin-top: 10px;
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 </style>
+
 <div class="section group">
     <div style="width: 70%; margin: 0 auto;">
         @using (Html.BeginForm("Payment", "Cart", FormMethod.Post))
-            {
+        {
             <div class="form-group">
-                <h4>Thông tin khách hàng</h4>
+                <h4>Thông tin người nhận hàng</h4>
+                @* Giữ lại mã KH + mã voucher *@
                 <input name="MaKH" class="form-control" value="@Model.MaKH" type="hidden" />
                 <input id="appliedVoucher" name="MaVoucher" type="hidden" value="0" />
             </div>
+
             <div class="form-group">
-                <label>Họ tên khách hàng</label>
-                <input name="TenKH" class="form-control" value="@Model.TenKH" readonly="readonly" />              
+                <label>Họ tên người nhận</label>
+                <input name="TenKH" class="form-control" value="@Model.TenKH" />
+                <small class="text-muted">Có thể sửa khác với tên tài khoản.</small>
             </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input name="Email" type="email" class="form-control" value="@Model.Email" readonly="readonly" />  
+
+            <div class="form-group">
+                <label>Email người nhận</label>
+                <input name="Email" type="email" class="form-control" value="@Model.Email" />
+            </div>
+
+            <div class="form-group">
+                <label>Địa chỉ giao hàng</label>
+                <div class="input-group">
+                    <input id="receiverAddress" name="DiaChi" class="form-control" value="@Model.DiaChi" />
+                    <span class="input-group-btn">
+                        <button type="button" id="btnPickOnMap" class="btn btn-default">
+                            <i class="fa fa-map-marker"></i> Xem trên bản đồ
+                        </button>
+                    </span>
                 </div>
-                <div class="form-group">
-                    <label>Địa chỉ</label>
-                    <input name="DiaChi" class="form-control" value="@Model.DiaChi" readonly="readonly" />
+                <small class="text-muted">Bạn có thể chỉnh lại địa chỉ nhận hàng cho đơn này.</small>
+            </div>
+
+            <div id="mapContainer" class="map-container" style="display:none;">
+                <iframe id="mapFrame"
+                        width="100%" height="250"
+                        frameborder="0" style="border:0;" allowfullscreen="">
+                </iframe>
+            </div>
+
+            <div class="form-group">
+                <label>Điện thoại người nhận</label>
+                <input name="DienThoai" class="form-control" value="@Model.DienThoai" />
+            </div>
+
+            <div class="form-group">
+                <label>Ghi chú đơn hàng (tùy chọn)</label>
+                <textarea name="GhiChu" class="form-control" rows="3"
+                          placeholder="Ví dụ: Giao giờ hành chính, gọi trước 15 phút..." maxlength="500"></textarea>
+                <small class="text-muted">Tối đa 500 ký tự</small>
+            </div>
+
+            <hr />
+
+            <h4>Phương thức thanh toán</h4>
+
+            <div class="checkout-button">
+                <div class="checkout-selector">
+                    <input type="radio" name="PaymentMethod" value="1" checked="checked"
+                           class="btn btn-m2 btn-checkout">
                 </div>
-                <div class="form-group">
-                    <label>Điện thoại</label>
-                    <input name="DienThoai" class="form-control" value="@Model.DienThoai" readonly="readonly" />
+                <div class="content" style="display: flex;align-items: center;">
+                    <span class="checkout-title">
+                        Thanh toán khi nhận hàng (COD)
+                    </span>
                 </div>
-                <div class="form-group">
-                    <label>Ghi chú đơn hàng (tùy chọn)</label>
-                    <textarea name="GhiChu" class="form-control" rows="3" placeholder="Ví dụ: Giao hàng giờ hành chính, gọi trước 15 phút..." maxlength="500"></textarea>
-                    <small class="text-muted">Tối đa 500 ký tự</small>
+            </div>
+            <br />
+
+            <div class="checkout-button">
+                <div class="checkout-selector">
+                    <input type="radio" name="PaymentMethod" value="2"
+                           class="btn btn-m2 btn-checkout">
                 </div>
-                <div class="checkout-button">
-                    <div class="checkout-selector">
-                        <input type="radio" name="PaymentMethod" value="1" checked="checked" class="btn btn-m2 btn-checkout">
-                    </div>
-                    <div class="content" style="display: flex;align-items: center;">
-                        <span class="checkout-title">
-                            Thanh Toán Khi Nhận Hàng (COD)
-                        </span>
-                    </div>
+                <div class="content" style="display: flex;align-items: center;">
+                    <span class="checkout-title">
+                        Thanh toán bằng ví MoMo
+                    </span>
                 </div>
-                <br/>
-                @* Tạm thời ẩn MoMo vì chưa cấu hình
-                <div class="checkout-button">
-                    <div class="checkout-selector">
-                        <input type="radio" name="PaymentMethod" value="2" class="btn btn-m2 btn-checkout">
-                    </div>
-                    <div class="content" style="display: flex;align-items: center;">
-                        <span class="checkout-title">
-                            Thanh toán bằng MoMo
-                        </span>
-                    </div>
+            </div>
+            <br />
+
+
+
+            @* Nếu muốn thêm thẻ / ví điện tử khác (demo) *@
+            <div class="checkout-button">
+                <div class="checkout-selector">
+                    <input type="radio" name="PaymentMethod" value="3"
+                           class="btn btn-m2 btn-checkout">
                 </div>
-                <br/>
-                *@
-                <button type="submit" class="btn btn-success btn-lg btn-block">Đặt Hàng</button>
+                <div class="content" style="display: flex;align-items: center;">
+                    <span class="checkout-title">
+                        Thanh toán thẻ / ví điện tử (đang phát triển)
+                    </span>
+                </div>
+            </div>
+            <br />
+
+            <button type="submit" class="btn btn-success btn-lg btn-block">
+                Đặt hàng
+            </button>
         }
     </div>
-
 </div>
 
-
-
+<script>
+    $(function () {
+        $('#btnPickOnMap').click(function () {
+            var addr = $('#receiverAddress').val();
+            if (!addr) {
+                alert('Vui lòng nhập địa chỉ trước.');
+                return;
+            }
+            var url = 'https://www.google.com/maps?q=' + encodeURIComponent(addr) + '&output=embed';
+            $('#mapFrame').attr('src', url);
+            $('#mapContainer').slideDown();
+        });
+    });
+</script>

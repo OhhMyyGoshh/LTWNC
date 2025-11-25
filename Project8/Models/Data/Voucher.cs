@@ -41,14 +41,18 @@ namespace WebBanSach.Models.Data
     }
 
     [Table("VoucherSuDung")]
-    public partial class VoucherSuDung
+    public class VoucherSuDung
     {
         [Key]
-        public int ID { get; set; }
+        public int Id { get; set; }
 
         public int MaVoucher { get; set; }
         public int MaKH { get; set; }
-        public int MaDDH { get; set; }
+
+        // Đơn hàng dùng voucher (chưa dùng thì null)
+        public int? MaDDH { get; set; }
+
+        // Ngày dùng voucher (chưa dùng thì null)
         public DateTime? NgaySuDung { get; set; }
 
         [ForeignKey("MaVoucher")]

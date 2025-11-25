@@ -1,0 +1,450 @@
+﻿@model IEnumerable<WebBanSach.Models.Data.VoucherSuDung>
+
+@{
+    ViewBag.Title = "Kho voucher của bạn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var now = DateTime.Now;
+
+    int total = ViewBag.TotalCount ?? 0;
+    int used = ViewBag.UsedCount ?? 0;
+    int usable = ViewBag.UsableCount ?? 0;
+    int expired = ViewBag.ExpiredCount ?? (total - used - usable);
+
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<style>
+    .vw-page {
+        margin-top: 30px;
+        margin-bottom: 40px;
+    }
+
+    .vw-header {
+        background: linear-gradient(90deg, #fdf3e7, #ffe9ef);
+        border-radius: 14px;
+        padding: 18px 22px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+
+    .vw-header-left {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+    }
+
+    .vw-icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ff7f50, #ff4b6a);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        box-shadow: 0 6px 14px rgba(255,75,106,0.45);
+    }
+
+    .vw-title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .vw-subtext {
+        margin: 2px 0 0;
+        font-size: 13px;
+        color: #777;
+    }
+
+    .vw-stats {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 12px;
+    }
+
+    .vw-stat-pill {
+        background: #ffffff;
+        border-radius: 999px;
+        padding: 6px 12px;
+        border: 1px solid #f0e0d0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #555;
+    }
+
+        .vw-stat-pill strong {
+            color: #333;
+        }
+
+    .vw-grid {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-left : 140px;
+        width: 100%
+    }
+
+    .vw-card {
+        width: 290px;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        display: flex;
+        flex-direction: column;
+        border-left: 4px solid #f39c12;
+    }
+
+    .vw-card-header {
+        padding: 14px 16px 6px;
+        background: linear-gradient(90deg, #fffdf6, #fff5ea);
+    }
+
+    .vw-voucher-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: #333;
+        margin: 0 0 4px;
+    }
+
+    .vw-voucher-code {
+        display: inline-block;
+        font-size: 13px;
+        font-weight: 700;
+        color: #e67e22;
+        background: #fff;
+        border-radius: 999px;
+        padding: 4px 10px;
+        border: 1px dashed #f39c12;
+    }
+
+    .vw-card-body {
+        padding: 10px 16px 12px;
+        font-size: 13px;
+        color: #555;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .vw-discount-line span {
+        font-weight: 700;
+        color: #d35400;
+    }
+
+    .vw-meta {
+        font-size: 12px;
+        color: #777;
+    }
+
+    .vw-expired {
+        color: #c0392b;
+        font-weight: 600;
+    }
+
+    .vw-status-row {
+        padding: 8px 16px 10px;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+    }
+
+    .vw-status-badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+    }
+
+    .vw-status-usable {
+        background: #e8f8f2;
+        color: #149764;
+    }
+
+    .vw-status-used {
+        background: #f2f4f7;
+        color: #666;
+    }
+
+    .vw-status-expired {
+        background: #fdeceb;
+        color: #c0392b;
+    }
+
+    .vw-btn-use {
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 999px;
+    }
+
+    .vw-empty {
+        margin-top: 24px;
+        text-align: center;
+        padding: 30px 15px;
+        background: #fafbff;
+        border-radius: 14px;
+        border: 1px dashed #d5ddff;
+        color: #777;
+    }
+
+        .vw-empty i {
+            font-size: 26px;
+            margin-bottom: 8px;
+            color: #4a6cf7;
+        }
+
+    /* Pagination */
+    .vw-pagination {
+        margin-top: 24px;
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .vw-page-link {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid #e0e4f0;
+        background: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        color: #555;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+        .vw-page-link:hover {
+            border-color: #4a6cf7;
+            color: #4a6cf7;
+            text-decoration: none;
+        }
+
+        .vw-page-link.active {
+            background: #4a6cf7;
+            border-color: #4a6cf7;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .vw-page-link.disabled {
+            opacity: 0.5;
+            cursor: default;
+            pointer-events: none;
+        }
+
+    @@media (max-width: 768px) {
+        .vw-header {
+            padding: 14px 12px;
+        }
+
+        .vw-header-left {
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="container vw-page">
+    <div class="vw-header">
+        <div class="vw-header-left">
+            <div class="vw-icon-circle">
+                <i class="fa fa-ticket"></i>
+            </div>
+            <div>
+                <h2 class="vw-title">Kho voucher của bạn</h2>
+                <p class="vw-subtext">
+                    Lưu trữ tất cả voucher bạn đã nhận được từ vòng quay hoặc khuyến mãi.
+                </p>
+            </div>
+        </div>
+        <div class="vw-stats">
+            <div class="vw-stat-pill">
+                <i class="fa fa-ticket"></i>
+                <span>Tổng: <strong>@total</strong> voucher</span>
+            </div>
+            <div class="vw-stat-pill">
+                <i class="fa fa-check-circle text-success"></i>
+                <span>Có thể dùng: <strong>@usable</strong></span>
+            </div>
+            <div class="vw-stat-pill">
+                <i class="fa fa-history text-muted"></i>
+                <span>Đã dùng: <strong>@used</strong></span>
+            </div>
+            <div class="vw-stat-pill">
+                <i class="fa fa-exclamation-circle text-danger"></i>
+                <span>Hết hạn / không hợp lệ: <strong>@expired</strong></span>
+            </div>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="vw-empty">
+            <i class="fa fa-inbox"></i>
+            <p>Hiện bạn chưa có voucher nào trong kho.</p>
+            <p>Hãy thử tham gia <a href="@Url.Action("Index", "LuckyWheel")">Vòng quay may mắn</a> hoặc sử dụng các chương trình khuyến mãi trên website.</p>
+        </div>
+    }
+    else
+    {
+        <div class="vw-grid">
+            @foreach (var item in Model)
+            {
+                var v = item.Voucher;
+                var isUsed = item.NgaySuDung != null || item.MaDDH > 0;
+
+                bool isValidTime = false;
+                bool isActive = false;
+                bool isExpired = false;
+
+                if (v != null)
+                {
+                    isValidTime = v.NgayBatDau <= now && v.NgayKetThuc >= now;
+                    isActive = v.TrangThai ?? false;
+                    isExpired = !isValidTime || !isActive;
+                }
+                else
+                {
+                    isExpired = true;
+                }
+
+                string statusText;
+                string statusClass;
+
+                if (v == null)
+                {
+                    statusText = "Không hợp lệ";
+                    statusClass = "vw-status-expired";
+                }
+                else if (isUsed)
+                {
+                    statusText = "Đã sử dụng";
+                    statusClass = "vw-status-used";
+                }
+                else if (isExpired)
+                {
+                    statusText = "Hết hạn / ngưng áp dụng";
+                    statusClass = "vw-status-expired";
+                }
+                else
+                {
+                    statusText = "Có thể sử dụng";
+                    statusClass = "vw-status-usable";
+                }
+
+                <div class="vw-card">
+                    <div class="vw-card-header">
+                        <p class="vw-voucher-name">
+                            @(v != null ? v.TenVoucher : "Voucher không xác định")
+                        </p>
+                        @if (v != null)
+                        {
+                            <span class="vw-voucher-code">Mã: @v.MaCode</span>
+                        }
+                    </div>
+                    <div class="vw-card-body">
+                        <div class="vw-discount-line">
+                            @if (v != null)
+                            {
+                                if (v.LoaiGiamGia == false)
+                                {
+                                    <span>Giảm @v.GiaTriGiam% trên đơn hàng</span>
+                                }
+                                else
+                                {
+                                    <span>Giảm @string.Format("{0:N0}", v.GiaTriGiam ?? 0) đ</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>Voucher không hợp lệ</span>
+                            }
+                        </div>
+
+                        @if (v != null)
+                        {
+                            <div class="vw-meta">
+                                Đơn tối thiểu: @string.Format("{0:N0}", v.GiaTriDonHangToiThieu) đ
+                            </div>
+                            <div class="vw-meta">
+                                Hiệu lực: @string.Format("{0:dd/MM/yyyy}", v.NgayBatDau)
+                                - @string.Format("{0:dd/MM/yyyy}", v.NgayKetThuc)
+                            </div>
+                        }
+
+                        @if (item.NgaySuDung.HasValue)
+                        {
+                            <div class="vw-meta">
+                                Đã dùng: @string.Format("{0:dd/MM/yyyy HH:mm}", item.NgaySuDung.Value)
+                            </div>
+                        }
+                    </div>
+                    <div class="vw-status-row">
+                        <span class="vw-status-badge @statusClass">@statusText</span>
+
+                        @if (!isUsed && !isExpired && v != null)
+                        {
+                            <a href="@Url.Action("Payment", "Cart")" class="btn btn-primary vw-btn-use">
+                                <i class="fa fa-shopping-cart"></i> Dùng ngay
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* PHÂN TRANG *@
+        if (totalPages >= 1)   // ✅ không để comment chung dòng
+        {
+            <nav class="vw-pagination">
+                @{
+                    var prevPage = currentPage - 1;
+                    var nextPage = currentPage + 1;
+                }
+
+                <a class="vw-page-link @(currentPage == 1 ? "disabled" : "")"
+                   href="@(currentPage == 1 ? "javascript:void(0)" : Url.Action("MyVouchers", "Voucher", new { page = prevPage }))">
+                    &laquo;
+                </a>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    if (i == currentPage)
+                    {
+                        <span class="vw-page-link active">@i</span>
+                    }
+                    else
+                    {
+                        <a class="vw-page-link"
+                           href="@Url.Action("MyVouchers", "Voucher", new { page = i })">
+                            @i
+                        </a>
+                    }
+                }
+
+                <a class="vw-page-link @(currentPage == totalPages ? "disabled" : "")"
+                   href="@(currentPage == totalPages ? "javascript:void(0)" : Url.Action("MyVouchers", "Voucher", new { page = nextPage }))">
+                    &raquo;
+                </a>
+            </nav>
+        }
+
+
+    }
+</div>

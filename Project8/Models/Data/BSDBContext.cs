@@ -1,4 +1,4 @@
-namespace WebBanSach.Models.Data
+﻿namespace WebBanSach.Models.Data
 {
     using System;
     using System.Data.Entity;
@@ -23,9 +23,14 @@ namespace WebBanSach.Models.Data
         public virtual DbSet<TheLoai> TheLoais { get; set; }
         public virtual DbSet<Voucher> Vouchers { get; set; }
         public virtual DbSet<VoucherSuDung> VoucherSuDungs { get; set; }
+
+        
         public virtual DbSet<DanhGiaSach> DanhGiaSaches { get; set; }
 
-
+        
+        public virtual DbSet<SachYeuThich> SachYeuThiches { get; set; }
+        public virtual DbSet<VongQuayVoucher> VongQuayVouchers { get; set; }
+        public virtual DbSet<LuotQuayVoucher> LuotQuayVouchers { get; set; }
 
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -103,6 +108,14 @@ namespace WebBanSach.Models.Data
                 .HasMany(e => e.Saches)
                 .WithRequired(e => e.TheLoai)
                 .WillCascadeOnDelete(false);
+
+            // === MAPPING CHO BẢNG MỚI ===
+
+            // Bảng ĐÁNH GIÁ (nếu trong SQL tên là DanhGiaSach)
+            // modelBuilder.Entity<DanhGiaSach>().ToTable("DanhGiaSach"); // chỉ bật nếu tên bảng là DanhGiaSach
+
+            // Bảng SÁCH YÊU THÍCH: trong SQL hiện tại tên là 'SachYeuThich'
+            modelBuilder.Entity<SachYeuThich>().ToTable("SachYeuThich");
         }
     }
 }

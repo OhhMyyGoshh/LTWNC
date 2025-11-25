@@ -12,6 +12,20 @@
     decimal tongTien = (Model != null)
         ? Model.Sum(x => (x.SoLuong ?? 0) * (x.DonGia ?? 0))
         : 0;
+    string tenNhan = (order != null && !string.IsNullOrWhiteSpace(order.TenNguoiNhan))
+                    ? order.TenNguoiNhan
+                    : (kh != null ? kh.TenKH : "");
+    string emailNhan = (order != null && !string.IsNullOrWhiteSpace(order.EmailNguoiNhan))
+                        ? order.EmailNguoiNhan
+                        : (kh != null ? kh.Email : "");
+    string dienThoaiNhan = (order != null && !string.IsNullOrWhiteSpace(order.DienThoaiNhan))
+                        ? order.DienThoaiNhan
+                        : (kh != null ? kh.DienThoai : "");
+    string diaChiNhan = (order != null && !string.IsNullOrWhiteSpace(order.DiaChiNhan))
+                        ? order.DiaChiNhan
+                        : (kh != null ? kh.DiaChi : "");
+
+
 }
 
 <style>
@@ -66,19 +80,19 @@
                 <tbody>
                     <tr>
                         <th style="width:150px;">Họ tên:</th>
-                        <td>@kh.TenKH</td>
+                        <td>@tenNhan</td>
                     </tr>
                     <tr>
                         <th>Email:</th>
-                        <td>@kh.Email</td>
+                        <td>@emailNhan</td>
                     </tr>
                     <tr>
                         <th>Điện thoại:</th>
-                        <td>@kh.DienThoai</td>
+                        <td>@dienThoaiNhan</td>
                     </tr>
                     <tr>
                         <th>Địa chỉ:</th>
-                        <td>@kh.DiaChi</td>
+                        <td>@diaChiNhan</td>
                     </tr>
                     <tr>
                         <th>Ngày đặt:</th>

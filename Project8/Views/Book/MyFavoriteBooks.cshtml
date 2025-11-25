@@ -1,0 +1,291 @@
+﻿@using PagedList.Mvc
+@using PagedList
+@model IPagedList<WebBanSach.Models.Data.Sach>
+
+@{
+    ViewBag.Title = "Sách yêu thích của bạn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int totalFavorite = ViewBag.TotalFavorite != null ? (int)ViewBag.TotalFavorite : Model.TotalItemCount;
+}
+
+<style>
+    .favorite-page {
+        margin-top: 30px;
+        margin-bottom: 40px;
+    }
+
+    .favorite-header {
+        background: linear-gradient(90deg, #ffe0e9, #fff5e6);
+        border-radius: 14px;
+        padding: 18px 24px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .favorite-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .favorite-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        color: #e74c3c;
+        font-size: 22px;
+    }
+
+    .favorite-title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .favorite-subtext {
+        margin: 0;
+        font-size: 13px;
+        color: #777;
+    }
+
+    .favorite-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: flex-start;
+    }
+
+    .favorite-card {
+        width: 230px;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        transition: transform .2s ease, box-shadow .2s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .favorite-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+        }
+
+    .favorite-img-wrapper {
+        position: relative;
+        height: 260px;
+        background: #f5f5f5;
+    }
+
+        .favorite-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .favorite-heart {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #e74c3c;
+        font-size: 16px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+
+    .favorite-body {
+        padding: 12px 14px 10px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .favorite-book-title {
+        font-size: 15px;
+        font-weight: 600;
+        height: 40px;
+        overflow: hidden;
+        margin-bottom: 4px;
+    }
+
+        .favorite-book-title a {
+            color: #333;
+            text-decoration: none;
+        }
+
+            .favorite-book-title a:hover {
+                color: #e67e22;
+            }
+
+    .favorite-author {
+        font-size: 12px;
+        color: #777;
+        margin-bottom: 6px;
+    }
+
+    .favorite-price {
+        font-size: 15px;
+        font-weight: 700;
+        color: #d9534f;
+        margin-bottom: 10px;
+    }
+
+    .favorite-actions {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+    }
+
+        .favorite-actions .btn {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+    .favorite-empty {
+        text-align: center;
+        padding: 40px 0 20px;
+        color: #777;
+    }
+</style>
+
+<div class="container favorite-page">
+    <div class="favorite-header">
+        <div class="favorite-header-left">
+            <div class="favorite-icon">
+                <i class="fa fa-heart"></i>
+            </div>
+            <div>
+                <h3 class="favorite-title">Sách yêu thích của bạn</h3>
+                <p class="favorite-subtext">
+                    Có @totalFavorite cuốn sách trong danh sách yêu thích.
+                </p>
+            </div>
+        </div>
+        <div>
+            <a href="@Url.Action("ShowAllBook", "Book")" class="btn btn-default btn-sm">
+                <i class="fa fa-book"></i> Xem tất cả sách
+            </a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="favorite-empty">
+            <p><i class="fa fa-info-circle"></i> Hiện bạn chưa thêm cuốn sách nào vào danh sách yêu thích.</p>
+            <a href="@Url.Action("ShowAllBook", "Book")" class="btn btn-primary">
+                <i class="fa fa-search"></i> Khám phá sách ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="favorite-grid">
+            @foreach (var item in Model)
+            {
+                var imagePath = !string.IsNullOrEmpty(item.AnhBia)
+                    ? Url.Content("~/images/" + item.AnhBia)
+                    : Url.Content("~/images/no-image.jpg");
+
+                <div class="favorite-card">
+                    <div class="favorite-img-wrapper">
+                        <a href="@Url.Action("Details", "Book", new { id = item.MaSach })">
+                            <img src="@imagePath" alt="@item.TenSach" />
+                        </a>
+                        <div class="favorite-heart">
+                            <i class="fa fa-heart"></i>
+                        </div>
+                    </div>
+                    <div class="favorite-body">
+                        <div class="favorite-book-title">
+                            <a href="@Url.Action("Details", "Book", new { id = item.MaSach })">
+                                @item.TenSach
+                            </a>
+                        </div>
+                        <div class="favorite-author">
+                            @if (item.TacGia != null)
+                            {
+                                @:Nhà xuất bản: @item.NhaXuatBan.TenNXB
+                            }
+                        </div>
+                        <div class="favorite-author">
+                            @if (item.TacGia != null)
+                            {
+                                @:Thể loại: @item.TheLoai.TenLoai
+                            }
+                        </div>
+                        <div class="favorite-author">
+                            @if (item.TacGia != null)
+                            {
+                                @:Tác giả: @item.TacGia.TenTG
+                            }
+                        </div>
+                        <div class="favorite-price">
+                            @if (item.GiaBan.HasValue)
+                            {
+                                @item.GiaBan.Value.ToString("N0") @:VND
+                            }
+                            else
+                            {
+                                @:Liên hệ
+                            }
+                        </div>
+
+                        <div class="favorite-actions">
+                            <a href="@Url.Action("Details", "Book", new { id = item.MaSach })"
+                               class="btn btn-primary btn-sm">
+                                <i class="fa fa-eye"></i> Xem chi tiết
+                            </a>
+
+                            @if (Session["User"] != null)
+                            {
+                                using (Html.BeginForm("ToggleFavorite", "Book", FormMethod.Post,
+                                       new { style = "display:inline-block; margin:0;" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("MaSach", item.MaSach)
+                                    <button type="submit"
+                                            class="btn btn-default btn-sm"
+                                            title="Bỏ khỏi danh sách yêu thích"
+                                            onclick="return confirm('Bạn có chắc muốn bỏ cuốn sách này khỏi danh sách yêu thích không?');">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center" style="margin-top:25px;">
+            @Html.PagedListPager(Model, page =>
+                Url.Action("MyFavoriteBooks", "Book", new { page }),
+                new PagedListRenderOptions
+                {
+                    DisplayLinkToFirstPage = PagedListDisplayMode.IfNeeded,
+                    DisplayLinkToLastPage = PagedListDisplayMode.IfNeeded,
+                    DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                    DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                    UlElementClasses = new[] { "pagination" }
+                })
+        </div>
+    }
+</div>

@@ -55,5 +55,10 @@
 
         [ForeignKey("MaVoucher")]
         public virtual Voucher Voucher { get; set; }
+        // Thông tin người nhận tại thời điểm đặt hàng
+        public string TenNguoiNhan { get; set; }
+        public string EmailNguoiNhan { get; set; }
+        public string DiaChiNhan { get; set; }
+        public string DienThoaiNhan { get; set; }
     }
 }

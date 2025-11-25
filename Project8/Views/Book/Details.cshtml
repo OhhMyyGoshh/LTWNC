@@ -1,13 +1,107 @@
 ﻿@model WebBanSach.Models.Data.Sach
+@using WebBanSach.Models.Data
 
 @{
     ViewBag.Title = "Chi tiết sách";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    // Điểm trung bình và số lượt đánh giá, controller set vào ViewBag
+    // Điểm trung bình và số lượt đánh giá
     double avgRating = ViewBag.AvgRating != null ? (double)ViewBag.AvgRating : 0;
     int ratingCount = ViewBag.RatingCount != null ? (int)ViewBag.RatingCount : 0;
+
+    // Chuỗi sao trung bình
+    int filledStars = (int)Math.Round(avgRating);
+    if (filledStars < 0) { filledStars = 0; }
+    if (filledStars > 5) { filledStars = 5; }
+    string starText = new string('★', filledStars) + new string('☆', 5 - filledStars);
+
+    // Favorite
+    bool isFavorite = ViewBag.IsFavorite != null && (bool)ViewBag.IsFavorite;
+    string favoriteMessage = ViewBag.FavoriteMessage as string;
+
+    // Rating & review
+    string ratingMessage = ViewBag.RatingMessage as string;
+    var reviews = ViewBag.Reviews as List<DanhGiaSach>;
+    DanhGiaSach myReview = ViewBag.MyReview as DanhGiaSach;
+    bool isLoggedIn = ViewBag.IsLoggedIn != null && (bool)ViewBag.IsLoggedIn;
 }
+
+<style>
+    .approved-review-box {
+        margin-top: 20px;
+        padding: 15px 18px;
+        border-radius: 6px;
+        border: 1px solid #eee;
+        background: #fafafa;
+    }
+
+    .approved-review-title {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .approved-review-list {
+        max-height: 260px; /* chiều cao tối đa */
+        overflow-y: auto; /* thanh cuộn dọc */
+        padding-right: 6px;
+    }
+
+        .approved-review-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .approved-review-list::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .approved-review-list::-webkit-scrollbar-thumb {
+            background: #c7c7c7;
+            border-radius: 10px;
+        }
+
+    .approved-review-item {
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+        .approved-review-item:last-child {
+            border-bottom: none;
+        }
+
+    .approved-review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .approved-review-name {
+        font-weight: 600;
+        color: #333;
+        margin-right: 8px;
+    }
+
+    .approved-review-stars {
+        color: #f0ad4e;
+        margin-left: 4px;
+    }
+
+    .approved-review-date {
+        font-size: 12px;
+        color: #999;
+        white-space: nowrap;
+    }
+
+    .approved-review-content {
+        font-size: 13px;
+        color: #555;
+        margin-left: 2px;
+    }
+</style>
+
 @if (TempData["CartError"] != null)
 {
     <div class="alert alert-danger mt-3">
@@ -15,10 +109,10 @@
     </div>
 }
 
-@if (ViewBag.RatingMessage != null)
+@if (!string.IsNullOrEmpty(favoriteMessage))
 {
-    <div class="alert alert-success mt-3">
-        @ViewBag.RatingMessage
+    <div class="alert alert-info mt-3">
+        @favoriteMessage
     </div>
 }
 
@@ -35,31 +129,27 @@
     <div class="col-md-8">
         <h2 style="margin-top:0; font-weight:600; color:#333;">@Model.TenSach</h2>
 
-        @* HIỂN THỊ SAO ĐÃ ĐƯỢC ĐÁNH GIÁ CHO SÁCH NÀY *@
-        @if (ratingCount > 0)
-        {
-            <div style="margin:5px 0 10px 0;">
-                <span style="font-size:16px; font-weight:600; color:#f0ad4e;">
-                    @avgRating.ToString("0.0")/5
+        @* SAO ĐÃ ĐÁNH GIÁ *@
+        <div style="margin:5px 0 10px 0;">
+            @if (ratingCount > 0)
+            {
+                <span style="font-size:18px; color:#f0ad4e; font-weight:600;">
+                    @starText
                 </span>
-                <span style="margin-left:8px;">
-                    @for (int i = 1; i <= 5; i++)
-                    {
-                        if (i <= Math.Round(avgRating))
-                        {
-                            @:<i class="fa fa-star" style="color:#f0ad4e;"></i>
-                        }
-                        else
-                        {
-                            @:<i class="fa fa-star-o" style="color:#f0ad4e;"></i>
-                        }
-                    }
+                <span style="margin-left:8px; font-size:14px; color:#f0ad4e;">
+                    @avgRating.ToString("0.0") / 5
                 </span>
                 <span style="color:#777; font-size:13px; margin-left:5px;">
-                    ( @ratingCount đánh giá )
+                    (@ratingCount đánh giá)
                 </span>
-            </div>
-        }
+            }
+            else
+            {
+                <span style="color:#777; font-size:13px;">
+                    Chưa có đánh giá nào cho cuốn sách này.
+                </span>
+            }
+        </div>
 
         <p style="font-size:15px; color:#777; margin-bottom:4px;">
             <strong>Thể loại:</strong> @Model.TheLoai.TenLoai
@@ -105,7 +195,7 @@
             }
         </p>
 
-        @* FORM THÊM VÀO GIỎ *@
+        @* FORM THÊM VÀO GIỎ + YÊU THÍCH *@
         @if (conHang)
         {
             using (Html.BeginForm("AddItem", "Cart", FormMethod.Get, new { @class = "form-inline", style = "margin-top:10px;" }))
@@ -127,6 +217,31 @@
                     THÊM VÀO GIỎ HÀNG
                 </button>
             }
+
+            @* NÚT YÊU THÍCH *@
+            if (Session["User"] != null)
+            {
+                using (Html.BeginForm("ToggleFavorite", "Book", FormMethod.Post,
+                       new { @class = "form-inline", style = "margin-top:10px; margin-left:0;" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.Hidden("MaSach", Model.MaSach)
+
+                    <button type="submit"
+                            class="btn btn-default"
+                            style="padding:6px 16px; border-radius:20px; margin-top:8px;">
+                        <i class="fa @(isFavorite ? "fa-heart" : "fa-heart-o")"
+                           style="color:@(isFavorite ? "#e74c3c" : "#999");"></i>
+                        @(isFavorite ? " Bỏ yêu thích" : " Yêu thích")
+                    </button>
+                }
+            }
+            else
+            {
+                <p style="margin-top:10px; font-size:12px; color:#777;">
+                    <a href="/User/LoginPage">Đăng nhập</a> để thêm sách vào danh sách yêu thích.
+                </p>
+            }
         }
         else
         {
@@ -137,7 +252,7 @@
     </div>
 </div>
 
-@* ====== KHỐI ĐÁNH GIÁ SẢN PHẨM (RATING + REVIEW) ====== *@
+@* ====== KHỐI ĐÁNH GIÁ SẢN PHẨM (FORM + COMMENT DUYỆT) ====== *@
 <div class="row" style="margin-top:30px;">
     <div class="col-md-12">
         <h3 style="margin-bottom:15px;">
@@ -147,73 +262,86 @@
         <div style="margin-bottom:15px;">
             @if (ratingCount > 0)
             {
-                <span style="font-size:16px; font-weight:600; color:#f0ad4e;">
-                    @avgRating.ToString("0.0")/5
+                <span style="font-size:18px; color:#f0ad4e; font-weight:600;">
+                    @starText
                 </span>
-                <span>
-                    @for (int i = 1; i <= 5; i++)
-                    {
-                        if (i <= Math.Round(avgRating))
-                        {
-                            @:<i class="fa fa-star" style="color:#f0ad4e;"></i>
-                        }
-                        else
-                        {
-                            @:<i class="fa fa-star-o" style="color:#f0ad4e;"></i>
-                        }
-                    }
-                    <span style="color:#777; font-size:13px; margin-left:5px;">
-                        ( @ratingCount đánh giá )
-                    </span>
+                <span style="margin-left:8px; font-size:14px; color:#f0ad4e;">
+                    @avgRating.ToString("0.0") / 5
+                </span>
+                <span style="color:#777; font-size:13px; margin-left:5px;">
+                    (@ratingCount đánh giá)
                 </span>
             }
             else
             {
-                <span style="color:#777;">Chưa có đánh giá nào cho cuốn sách này. Hãy là người đầu tiên đánh giá!</span>
+                <span style="color:#777;">
+                    Chưa có đánh giá nào cho cuốn sách này. Hãy là người đầu tiên đánh giá!
+                </span>
             }
         </div>
 
-        @* Form gửi đánh giá *@
-        @if (Session["User"] != null)
+        @* Form gửi / cập nhật đánh giá *@
+        @if (isLoggedIn)
         {
-            using (Html.BeginForm("SubmitRating", "Book", FormMethod.Post, new { @class = "form-horizontal", id = "ratingForm" }))
-            {
-                @Html.AntiForgeryToken()
-                @Html.Hidden("MaSach", Model.MaSach)
-                @Html.Hidden("Rating", "", new { id = "ratingValue" })
+            <div class="panel panel-default" style="margin-bottom:15px;">
+                <div class="panel-heading">
+                    <strong>@(myReview == null ? "Viết đánh giá của bạn" : "Cập nhật đánh giá của bạn")</strong>
+                </div>
+                <div class="panel-body">
+                    @using (Html.BeginForm("SubmitRating", "Book", FormMethod.Post, new { @class = "form-horizontal", id = "ratingForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("MaSach", Model.MaSach)
+                        @Html.Hidden("Rating", myReview != null ? myReview.SoSao : 0, new { id = "ratingValue" })
 
-                <div class="form-group">
-                    <label class="control-label col-md-2">Chọn số sao:</label>
-                    <div class="col-md-10">
-                        <div id="starContainer" style="font-size:24px; color:#f0ad4e; cursor:pointer;">
-                            <i class="fa fa-star-o rating-star" data-value="1"></i>
-                            <i class="fa fa-star-o rating-star" data-value="2"></i>
-                            <i class="fa fa-star-o rating-star" data-value="3"></i>
-                            <i class="fa fa-star-o rating-star" data-value="4"></i>
-                            <i class="fa fa-star-o rating-star" data-value="5"></i>
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Chọn số sao:</label>
+                            <div class="col-md-10">
+                                @{
+                                    var myStar = myReview != null ? myReview.SoSao : 0;
+                                }
+                                <div id="starContainer" style="font-size:24px; color:#f0ad4e; cursor:pointer;">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        var filled = i <= myStar;
+                                        <i class="fa @(filled ? "fa-star" : "fa-star-o") rating-star" data-value="@i"></i>
+                                    }
+                                </div>
+                                <span id="ratingHelp" style="color:#999; font-size:12px;">
+                                    @(myReview != null
+                                        ? ("Bạn đã đánh giá " + myReview.SoSao + " sao (có thể chỉnh lại).")
+                                        : "Nhấn vào số sao để chọn (1 - 5)")
+                                </span>
+                            </div>
                         </div>
-                        <span id="ratingHelp" style="color:#999; font-size:12px;">Nhấn vào số sao để chọn (1 - 5)</span>
-                    </div>
-                </div>
 
-                <div class="form-group" style="margin-top:10px;">
-                    <label class="control-label col-md-2">Nhận xét:</label>
-                    <div class="col-md-10">
-                        <textarea name="Comment"
-                                  class="form-control"
-                                  rows="3"
-                                  placeholder="Hãy chia sẻ cảm nhận của bạn về cuốn sách này..."></textarea>
-                    </div>
-                </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label class="control-label col-md-2">Nhận xét:</label>
+                            <div class="col-md-10">
+                                <textarea name="Comment"
+                                          class="form-control"
+                                          rows="3"
+                                          placeholder="Hãy chia sẻ cảm nhận của bạn về cuốn sách này...">@((myReview != null) ? myReview.NoiDung : "")</textarea>
+                            </div>
+                        </div>
 
-                <div class="form-group" style="margin-top:10px;">
-                    <div class="col-md-offset-2 col-md-10">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fa fa-paper-plane"></i> Gửi đánh giá
-                        </button>
-                    </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <div class="col-md-offset-2 col-md-10">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fa fa-paper-plane"></i> Gửi đánh giá
+                                </button>
+                            </div>
+                        </div>
+
+                        if (!string.IsNullOrEmpty(ratingMessage))
+                        {
+                            <p class="text-info" style="margin-top:8px; margin-left:15px;">
+                                @ratingMessage
+                            </p>
+                        }
+                    }
                 </div>
-            }
+            </div>
         }
         else
         {
@@ -221,6 +349,51 @@
                 Bạn cần <a href="/User/LoginPage">đăng nhập</a> để đánh giá sản phẩm.
             </div>
         }
+
+        @* DANH SÁCH BÌNH LUẬN ĐÃ ĐƯỢC ADMIN DUYỆT *@
+        <div class="approved-review-box">
+            <h4 class="approved-review-title">
+                <i class="fa fa-comments-o"></i> Bình luận đã được duyệt
+            </h4>
+
+            @if (reviews != null && reviews.Any())
+            {
+                <div class="approved-review-list">
+                    @foreach (var r in reviews)
+                    {
+                        <div class="approved-review-item">
+                            <div class="approved-review-header">
+                                <div>
+                                    <span class="approved-review-name">
+                                        @(r.KhachHang != null ? r.KhachHang.TenKH : "Khách hàng")
+                                    </span>
+                                    <span class="approved-review-stars">
+                                        @{
+                                            var s = new string('★', r.SoSao) + new string('☆', 5 - r.SoSao);
+                                        }
+                                        @s
+                                    </span>
+                                </div>
+                                <span class="approved-review-date">
+                                    @r.NgayDanhGia.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(r.NoiDung))
+                            {
+                                <div class="approved-review-content">
+                                    @r.NoiDung
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">Chưa có bình luận nào được admin duyệt cho sách này.</p>
+            }
+        </div>
     </div>
 </div>
 
@@ -234,7 +407,7 @@
 @section scripts{
     <script>
         $(function () {
-            var selectedRating = 0;
+            var selectedRating = parseInt($('#ratingValue').val() || '0');
 
             function renderStars(rating) {
                 $('.rating-star').each(function () {
@@ -246,6 +419,9 @@
                     }
                 });
             }
+
+            // render sao ban đầu (nếu đã từng đánh giá)
+            renderStars(selectedRating);
 
             $('.rating-star').on('mouseenter', function () {
                 var value = parseInt($(this).data('value'));
